@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
   <title>CỔNG TIN TỨC ĐIỆN TỬ TỰ HÀNH | Tin Tức 24/7</title>
   
   <!-- Favicon & Meta SEO -->
@@ -590,7 +591,7 @@
 
           <!-- Ảnh phóng to -->
           <div class="relative rounded-xl overflow-hidden aspect-video bg-slate-100 dark:bg-slate-800 shadow-md">
-            <img id="modalImage" src="" alt="Thumbnail bài viết" class="w-full h-full object-cover">
+            <img id="modalImage" src="" alt="Thumbnail bài viết" class="w-full h-full object-cover" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src=getFallbackImage(currentModalArticle ? currentModalArticle.category : 'Tin tức');">
             <div id="modalProminencePill" class="absolute top-3 left-3 px-3 py-1 bg-red-600 text-white text-xs font-bold uppercase rounded-md shadow">
               Tin Nóng
             </div>
@@ -861,10 +862,10 @@
     const DEFAULT_CONFIG_SHEET_URL = 'https://docs.google.com/spreadsheets/d/11mhGrhrTpLMUeFV6YHG3XIz-sraC6jVFbXpc48AIUGY/edit?gid=224611075#gid=224611075';
     const DEFAULT_CONFIG_SHEET_TAB = 'TinTuc';
 
-    const STORAGE_KEY_ARTICLES = 'news_portal_articles_v5_live';
+    const STORAGE_KEY_ARTICLES = 'news_portal_articles_v8_live';
     const STORAGE_KEY_BOOKMARKS = 'news_portal_bookmarks_v2';
-    const STORAGE_KEY_SHEET_URL = 'news_portal_sheet_url_v5_live';
-    const STORAGE_KEY_SHEET_TAB = 'news_portal_sheet_tab_v5_live';
+    const STORAGE_KEY_SHEET_URL = 'news_portal_sheet_url_v8_live';
+    const STORAGE_KEY_SHEET_TAB = 'news_portal_sheet_tab_v8_live';
     const STORAGE_KEY_THEME = 'news_portal_theme_v2';
     const STORAGE_KEY_LAST_SYNC = 'news_portal_last_sync_v2';
 
@@ -1865,39 +1866,27 @@
         // Tự động nhận diện chỉ số cột thông minh theo Header (tránh lệch cột)
         let colMap = { stt: 0, time: 1, category: 2, title: 3, tldr: 4, source: 5, link: 6, thumb: 7, prominence: 8 };
 
-        // 1. Kiểm tra từ header cols
+        // 1. Nhận diện chuẩn xác từ nhãn cột (response.table.cols)
         if (response.table.cols && response.table.cols.length > 0) {
           response.table.cols.forEach((col, idx) => {
-            const lbl = (col.label || '').toLowerCase();
-            if (lbl.includes('tiêu đề') || lbl.includes('title')) colMap.title = idx;
-            else if (lbl.includes('chuyên mục') || lbl.includes('category')) colMap.category = idx;
-            else if (lbl.includes('tóm tắt') || lbl.includes('tldr') || lbl.includes('summary')) colMap.tldr = idx;
-            else if (lbl.includes('nguồn') || lbl.includes('source')) colMap.source = idx;
-            else if (lbl.includes('link') || lbl.includes('url')) colMap.link = idx;
+            const lbl = (col.label || '').toLowerCase().trim();
+            if (lbl.includes('tiêu đề') || lbl === 'title') colMap.title = idx;
+            else if (lbl.includes('chuyên mục') || lbl === 'category') colMap.category = idx;
+            else if (lbl.includes('tóm tắt') || lbl.includes('tldr')) colMap.tldr = idx;
+            else if (lbl.includes('nguồn') || lbl === 'source') colMap.source = idx;
+            else if (lbl.includes('link') || lbl === 'url') colMap.link = idx;
             else if (lbl.includes('ảnh') || lbl.includes('thumb') || lbl.includes('image')) colMap.thumb = idx;
-            else if (lbl.includes('thời gian') || lbl.includes('ngày') || lbl.includes('time')) colMap.time = idx;
-            else if (lbl.includes('mức độ') || lbl.includes('nổi bật')) colMap.prominence = idx;
+            else if (lbl.includes('thời gian') || lbl.includes('xuất bản') || lbl === 'time') colMap.time = idx;
+            else if (lbl.includes('nổi bật') || lbl.includes('mức độ')) colMap.prominence = idx;
           });
         }
 
-        // 2. Kiểm tra bổ sung từ dòng 0 (nếu dòng 0 là Header tiêu đề cột)
+        // 2. Kiểm tra nếu dòng 0 là Header tiêu đề cột thật (không lấy bài viết làm header)
         let startRowIdx = 0;
         if (rows[0] && rows[0].c) {
-          let isHeaderRow = false;
-          rows[0].c.forEach((cell, idx) => {
-            if (!cell) return;
-            const val = String(cell.v || cell.f || '').toLowerCase();
-            if (val.includes('tiêu đề') || val.includes('title')) { colMap.title = idx; isHeaderRow = true; }
-            else if (val.includes('chuyên mục') || val.includes('category')) { colMap.category = idx; isHeaderRow = true; }
-            else if (val.includes('tóm tắt') || val.includes('tldr')) { colMap.tldr = idx; isHeaderRow = true; }
-            else if (val.includes('nguồn') || val.includes('source')) { colMap.source = idx; isHeaderRow = true; }
-            else if (val.includes('link') || val.includes('url')) { colMap.link = idx; isHeaderRow = true; }
-            else if (val.includes('ảnh') || val.includes('thumb')) { colMap.thumb = idx; isHeaderRow = true; }
-            else if (val.includes('thời gian') || val.includes('xuất bản')) { colMap.time = idx; isHeaderRow = true; }
-            else if (val.includes('nổi bật') || val.includes('mức độ')) { colMap.prominence = idx; isHeaderRow = true; }
-          });
-          if (isHeaderRow) {
-            startRowIdx = 1; // Bỏ qua dòng tiêu đề
+          const firstVal = String((rows[0].c[colMap.title] && (rows[0].c[colMap.title].f || rows[0].c[colMap.title].v)) || '').trim();
+          if (firstVal === 'Tiêu đề bài báo' || firstVal === 'Tiêu đề' || firstVal === 'Title') {
+            startRowIdx = 1; // Bỏ qua dòng tiêu đề thực sự
           }
         }
 
@@ -1923,6 +1912,20 @@
           let thumb = getVal(colMap.thumb);
           let pubTime = getVal(colMap.time);
           let prominence = getVal(colMap.prominence);
+
+          // Tự động kiểm tra và phục hồi URL ảnh nếu cột bị lệch
+          const isHttp = (s) => typeof s === 'string' && (s.startsWith('http://') || s.startsWith('https://'));
+          if (!isHttp(thumb)) {
+            for (let j = 0; j < c.length; j++) {
+              const candidate = getVal(j);
+              if (isHttp(candidate) && candidate !== link) {
+                if (candidate.match(/\.(jpe?g|png|webp|gif)/i) || candidate.includes('cdn') || candidate.includes('thumb') || candidate.includes('image')) {
+                  thumb = candidate;
+                  break;
+                }
+              }
+            }
+          }
 
           // Dự phòng nếu dòng không chuẩn
           if (!title) {
@@ -2167,7 +2170,8 @@
             alt="${escapeHtml(leadStory.title)}" 
             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             loading="lazy"
-            onerror="this.src='${getFallbackImage(leadStory.category)}'"
+            referrerpolicy="no-referrer"
+            onerror="this.onerror=null; this.src='${getFallbackImage(leadStory.category)}'"
           >
           <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
           
@@ -2239,7 +2243,8 @@
                 alt="${escapeHtml(art.title)}" 
                 class="w-full h-full object-cover group-hover/item:scale-105 transition duration-300"
                 loading="lazy"
-                onerror="this.src='${getFallbackImage(art.category)}'"
+                referrerpolicy="no-referrer"
+                onerror="this.onerror=null; this.src='${getFallbackImage(art.category)}'"
               >
             </div>
             <div class="flex-1 min-w-0">
@@ -2298,7 +2303,8 @@
                 alt="${escapeHtml(art.title)}" 
                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
-                onerror="this.src='${getFallbackImage(art.category)}'"
+                referrerpolicy="no-referrer"
+                onerror="this.onerror=null; this.src='${getFallbackImage(art.category)}'"
               >
               
               <!-- Badges -->
@@ -2446,7 +2452,15 @@
       document.getElementById('modalCategoryBadge').textContent = art.category;
       document.getElementById('modalSourceBadge').textContent = art.source;
       document.getElementById('modalTimeBadge').textContent = art.publishedAt;
-      document.getElementById('modalImage').src = art.thumbnail;
+      const modalImg = document.getElementById('modalImage');
+      if (modalImg) {
+        modalImg.referrerPolicy = 'no-referrer';
+        modalImg.onerror = function() {
+          this.onerror = null;
+          this.src = getFallbackImage(art.category);
+        };
+        modalImg.src = art.thumbnail || getFallbackImage(art.category);
+      }
       document.getElementById('modalOriginalLink').href = art.link;
 
       const prominenceEl = document.getElementById('modalProminencePill');
@@ -2557,10 +2571,15 @@
       let voiceWaitDone = false;
       let activeAudio = null;
       let speechRate = 1.0;
+      let keepAliveInterval = null;
 
       function refreshVoices() {
         if (!window.speechSynthesis) return [];
-        cachedVoices = window.speechSynthesis.getVoices() || [];
+        try {
+          cachedVoices = window.speechSynthesis.getVoices() || [];
+        } catch (e) {
+          cachedVoices = [];
+        }
         return cachedVoices;
       }
 
@@ -2578,7 +2597,8 @@
           n.includes("nam minh") ||
           n.includes("namminh") ||
           n.includes("linh") ||
-          n.includes("mai")
+          n.includes("mai") ||
+          n.includes("an")
         );
       }
 
@@ -2591,14 +2611,12 @@
         return new Promise((resolve) => {
           if (!window.speechSynthesis) return resolve(false);
           if (refreshVoices().some(isViVoice)) return resolve(true);
-          if (voiceWaitDone) return resolve(false);
 
           const t0 = Date.now();
           const timer = setInterval(() => {
             const has = refreshVoices().some(isViVoice);
             if (has || Date.now() - t0 >= maxMs) {
               clearInterval(timer);
-              if (!has) voiceWaitDone = true;
               resolve(has);
             }
           }, 150);
@@ -2623,7 +2641,7 @@
         return viList.sort((a, b) => score(b) - score(a))[0];
       }
 
-      function splitTextIntoChunks(text, maxLen = 170) {
+      function splitTextIntoChunks(text, maxLen = 140) {
         const clean = String(text).replace(/\s+/g, " ").trim();
         const sentences = clean.match(/[^.!?;:]+[.!?;:]*\s*/g) || [clean];
         const chunks = [];
@@ -2655,6 +2673,10 @@
 
       function stop() {
         speechToken++;
+        if (keepAliveInterval) {
+          clearInterval(keepAliveInterval);
+          keepAliveInterval = null;
+        }
         if (window.speechSynthesis) {
           try { window.speechSynthesis.cancel(); } catch (e) {}
         }
@@ -2688,17 +2710,30 @@
 
       function setRate(r) {
         speechRate = Math.max(0.5, Math.min(2.0, Number(r) || 1.0));
+        if (activeAudio) activeAudio.playbackRate = speechRate;
       }
 
+      // Tầng 2: Giọng đọc Online Google Translate TTS đa Mirror
       function speakOnlineFallback(text, token, options) {
-        const chunks = splitTextIntoChunks(text, 180);
-        const audio = new Audio();
-        activeAudio = audio;
+        const chunks = splitTextIntoChunks(text, 120);
         let idx = 0;
+        let mirrorIdx = 0;
+
+        const mirrors = [
+          (q) => `https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=vi&q=${q}`,
+          (q) => `https://translate.google.com/translate_tts?ie=UTF-8&client=gtx&tl=vi&q=${q}`,
+          (q) => `https://translate.google.com.vn/translate_tts?ie=UTF-8&client=tw-ob&tl=vi&q=${q}`
+        ];
+
+        // Khởi tạo audio duy nhất
+        if (!activeAudio) {
+          activeAudio = new Audio();
+        }
+        const audio = activeAudio;
 
         const silentFallback = () => {
           if (token !== speechToken) return;
-          if (options.onStatus) options.onStatus("⚠️ Giọng online không khả dụng. Đang chạy chế độ phụ đề tự động.", true);
+          if (options.onStatus) options.onStatus("⚠️ Giọng online tạm thời bận. Đang chạy chế độ phụ đề tự động.", true);
           const readMs = Math.max(5000, (String(text).length * 75) / speechRate);
           setTimeout(() => {
             if (token === speechToken && options.onend) options.onend();
@@ -2711,23 +2746,60 @@
             if (options.onend) options.onend();
             return;
           }
-          audio.src = "https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=vi&q=" + encodeURIComponent(chunks[idx++]);
+
+          const chunk = chunks[idx];
+          if (options.onStatus) {
+            options.onStatus(`🔊 Đang đọc: "${chunk.slice(0, 30)}..." (Giọng Google Online)`, false);
+          }
+
+          const q = encodeURIComponent(chunk);
+          const currentUrl = mirrors[mirrorIdx % mirrors.length](q);
+
+          audio.src = currentUrl;
           audio.playbackRate = speechRate;
+
+          audio.onended = () => {
+            if (token !== speechToken) return;
+            idx++;
+            mirrorIdx = 0; // reset mirror khi đọc thành công
+            playNext();
+          };
+
+          audio.onerror = (err) => {
+            console.warn("TTS mirror failed:", mirrorIdx, err);
+            mirrorIdx++;
+            if (mirrorIdx < mirrors.length) {
+              // Thử mirror khác
+              playNext();
+            } else {
+              // Hết mirror -> thử câu tiếp theo hoặc silent
+              idx++;
+              mirrorIdx = 0;
+              if (idx < chunks.length) {
+                playNext();
+              } else {
+                silentFallback();
+              }
+            }
+          };
+
           const playPromise = audio.play();
           if (playPromise && playPromise.catch) {
-            playPromise.catch(silentFallback);
+            playPromise.catch((err) => {
+              console.warn("Audio play() blocked/failed:", err);
+              silentFallback();
+            });
           }
         };
 
-        audio.onended = playNext;
-        audio.onerror = silentFallback;
         playNext();
       }
 
+      // Tầng 1: Web Speech API chuẩn (Đọc nối tiếp + Chống ngắt tiếng 15s Chromium)
       async function speak(text, options = {}) {
         stop();
         const token = ++speechToken;
-        const hasVoices = window.speechSynthesis ? await waitForVoices(2500) : false;
+        const hasVoices = window.speechSynthesis ? await waitForVoices(2000) : false;
         if (token !== speechToken) return;
 
         const voice = hasVoices ? getBestVoice() : null;
@@ -2737,31 +2809,60 @@
             options.onStatus(`🔊 Giọng: ${voice.name} [${voice.lang}]`, false);
           }
           window.speechSynthesis.cancel();
-          const chunks = splitTextIntoChunks(text);
+          const chunks = splitTextIntoChunks(text, 150);
+          let chunkIdx = 0;
 
-          chunks.forEach((chunk, i) => {
+          // Bộ giữ nhịp Chromium 15s (Chromium keep-alive)
+          if (keepAliveInterval) clearInterval(keepAliveInterval);
+          keepAliveInterval = setInterval(() => {
+            if (token !== speechToken) {
+              clearInterval(keepAliveInterval);
+              return;
+            }
+            if (window.speechSynthesis && window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+              window.speechSynthesis.pause();
+              window.speechSynthesis.resume();
+            }
+          }, 9000);
+
+          const speakNextUtterance = () => {
+            if (token !== speechToken) return;
+            if (chunkIdx >= chunks.length) {
+              if (keepAliveInterval) {
+                clearInterval(keepAliveInterval);
+                keepAliveInterval = null;
+              }
+              if (options.onend) options.onend();
+              return;
+            }
+
+            const chunk = chunks[chunkIdx++];
             const u = new SpeechSynthesisUtterance(chunk);
             u.voice = voice;
             u.lang = voice.lang || "vi-VN";
             u.rate = speechRate;
             u.pitch = 1.0;
 
+            u.onend = () => {
+              if (token === speechToken) {
+                speakNextUtterance();
+              }
+            };
+
             u.onerror = (e) => {
               if (token !== speechToken) return;
               if (e && (e.error === "interrupted" || e.error === "canceled")) return;
-              if (options.onerror) options.onerror(e);
+              console.warn("Utterance error:", e);
+              speakNextUtterance();
             };
 
-            if (i === chunks.length - 1) {
-              u.onend = () => {
-                if (token === speechToken && options.onend) options.onend();
-              };
-            }
             window.speechSynthesis.speak(u);
-          });
+          };
+
+          speakNextUtterance();
         } else {
           if (options.onStatus) {
-            options.onStatus("ℹ️ Thiết bị chưa có giọng tiếng Việt. Đang dùng giọng phát thanh trực tuyến dự phòng.", true);
+            options.onStatus("ℹ️ Thiết bị chưa có giọng tiếng Việt. Đang dùng giọng phát thanh trực tuyến dự phòng.", false);
           }
           speakOnlineFallback(text, token, options);
         }
