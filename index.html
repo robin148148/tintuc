@@ -1,0 +1,2415 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CỔNG TIN TỨC ĐIỆN TỬ TỰ HÀNH | Tin Tức 24/7</title>
+  
+  <!-- Favicon & Meta SEO -->
+  <meta name="description" content="Cổng thông tin báo chí điện tử tự hành tổng hợp từ Google Sheet & RSS. Tự động cập nhật 07:00 sáng hàng ngày với 6 chuyên mục trọng tâm.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📰</text></svg>">
+
+  <!-- Google Fonts: Inter (UI/Body) & Merriweather (Editorial Headlines) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            serif: ['Merriweather', 'Georgia', 'serif'],
+            masthead: ['Playfair Display', 'Georgia', 'serif'],
+          },
+          colors: {
+            editorial: {
+              red: '#b91c1c',
+              darkRed: '#991b1b',
+              navy: '#0f172a',
+              ink: '#1e293b',
+              paper: '#f8fafc',
+              border: '#e2e8f0',
+              darkBg: '#090d16',
+              darkCard: '#131b2e',
+              darkBorder: '#1e293b'
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'marquee': 'marquee 30s linear infinite',
+            'soundwave': 'soundwave 1.2s ease-in-out infinite alternate',
+          },
+          keyframes: {
+            marquee: {
+              '0%': { transform: 'translateX(0%)' },
+              '100%': { transform: 'translateX(-50%)' },
+            },
+            soundwave: {
+              '0%': { height: '6px' },
+              '100%': { height: '24px' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    .dark ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 4px;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #334155;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+
+    /* Hide scrollbar for category tabs */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Pause marquee on hover */
+    .marquee-container:hover .marquee-content {
+      animation-play-state: paused;
+    }
+
+    /* Drop-cap for editorial reading mode */
+    .editorial-dropcap::first-letter {
+      float: left;
+      font-size: 3.8rem;
+      line-height: 0.85;
+      margin: 0.1rem 0.6rem 0 0;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-weight: 700;
+      color: #b91c1c;
+    }
+    .dark .editorial-dropcap::first-letter {
+      color: #ef4444;
+    }
+
+    /* Line Clamp utilities */
+    .clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body class="bg-[#f8fafc] text-slate-800 dark:bg-[#090d16] dark:text-slate-100 font-sans min-h-screen transition-colors duration-200 antialiased selection:bg-red-500 selection:text-white">
+
+  <!-- ========================================================================= -->
+  <!-- 1. TOP BAR & BREAKING NEWS TICKER                                         -->
+  <!-- ========================================================================= -->
+  <aside aria-label="Thông tin nhanh buổi sáng" class="bg-slate-900 text-slate-300 text-xs border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between py-1.5 gap-2">
+        <!-- Ngày tháng tiếng Việt & Đồng hồ -->
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-1.5 font-medium text-slate-200">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-red-400"></i>
+            <span id="currentDateText">Đang tải ngày...</span>
+          </div>
+          <span class="text-slate-600 hidden sm:inline">|</span>
+          <div class="flex items-center space-x-1 font-mono text-amber-300 hidden sm:flex">
+            <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+            <span id="liveClock">07:00:00</span>
+          </div>
+        </div>
+
+        <!-- Tiện ích thời tiết & Tỷ giá thị trường -->
+        <div class="flex items-center space-x-4 text-[11px] text-slate-400">
+          <div class="flex items-center space-x-1.5 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/60">
+            <i data-lucide="sun" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Hà Nội: <b class="text-slate-200">26°C</b></span>
+          </div>
+          <div class="flex items-center space-x-1.5 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/60 hidden sm:flex">
+            <i data-lucide="cloud-sun" class="w-3.5 h-3.5 text-sky-400"></i>
+            <span>TP.HCM: <b class="text-slate-200">31°C</b></span>
+          </div>
+          <div class="flex items-center space-x-1.5 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700/60 hidden md:flex">
+            <i data-lucide="trending-up" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>VN-Index: <b class="text-emerald-400">1,288.6 (+5.4)</b></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- BREAKING NEWS TICKER -->
+  <div class="bg-red-700 text-white overflow-hidden shadow-inner flex items-center h-10 border-b border-red-800 relative z-20">
+    <div class="bg-red-900 text-white font-bold text-xs uppercase px-4 py-2 flex items-center space-x-2 shrink-0 z-10 shadow-md">
+      <span class="w-2 h-2 rounded-full bg-yellow-300 animate-ping inline-block"></span>
+      <i data-lucide="flame" class="w-4 h-4 text-yellow-300"></i>
+      <span class="tracking-wider">TIN NÓNG 24H:</span>
+    </div>
+    
+    <div class="relative w-full overflow-hidden marquee-container flex items-center cursor-pointer" onclick="openLeadOrBreakingStory()">
+      <div id="breakingNewsMarquee" class="flex whitespace-nowrap marquee-content text-xs sm:text-sm font-medium tracking-wide">
+        <!-- Nạp động qua JS -->
+        <span class="px-6 flex items-center"><span class="text-yellow-300 mr-2">●</span> Đang tải các dòng tin tức nóng nhất buổi sáng...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 2. MASTHEAD & HEADER TÒA SOẠN                                             -->
+  <!-- ========================================================================= -->
+  <header class="bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 transition-shadow duration-300 shadow-sm" id="mainHeader">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Dòng Masthead chính -->
+      <div class="flex items-center justify-between py-4 sm:py-5 border-b border-slate-100 dark:border-slate-800/80">
+        
+        <!-- Logo & Thương hiệu tòa soạn -->
+        <div class="flex items-center space-x-3 sm:space-x-4">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-tr from-red-700 to-red-500 rounded-lg flex items-center justify-center text-white shadow-lg shadow-red-500/20">
+            <i data-lucide="newspaper" class="w-6 h-6 sm:w-7 sm:h-7"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 class="font-masthead text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white uppercase leading-none">
+                Thời Báo <span class="text-red-600 dark:text-red-500">24H</span>
+              </h1>
+              <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700 hidden sm:inline-block">
+                Tự Hành
+              </span>
+            </div>
+            <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-serif italic mt-0.5">
+              Cổng thông tin báo chí tự động hóa đa nguồn liên kết Google Sheet & RSS
+            </p>
+          </div>
+        </div>
+
+        <!-- Bộ công cụ bên phải (Search, Dark mode, Sheet Sync Button) -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          
+          <!-- Thanh tìm kiếm mở nhanh -->
+          <div class="relative hidden lg:block w-64">
+            <input 
+              type="text" 
+              id="searchInputDesktop"
+              placeholder="Tìm kiếm tin bài... (Nhấn /)"
+              class="w-full pl-9 pr-8 py-1.5 text-xs bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-full border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+            >
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2 pointer-events-none"></i>
+            <kbd class="hidden sm:inline-block absolute right-2.5 top-1.5 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded">
+              /
+            </kbd>
+          </div>
+
+          <!-- Nút kích hoạt Search trên Mobile -->
+          <button 
+            onclick="toggleMobileSearch()"
+            class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full lg:hidden transition"
+            title="Tìm kiếm"
+          >
+            <i data-lucide="search" class="w-5 h-5"></i>
+          </button>
+
+          <!-- Nút Trạng thái Đồng bộ Google Sheet -->
+          <button 
+            onclick="openSheetConfigModal()"
+            id="syncStatusButton"
+            class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition"
+            title="Bấm để cấu hình URL Google Sheet hoặc đồng bộ"
+          >
+            <span class="relative flex h-2.5 w-2.5">
+              <span id="syncStatusPulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span id="syncStatusDot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span id="syncStatusText" class="hidden sm:inline">Sheet: Sẵn sàng</span>
+            <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-400 ml-0.5"></i>
+          </button>
+
+          <!-- Nút Bật/Tắt Giao diện Tối/Sáng -->
+          <button 
+            onclick="toggleDarkMode()" 
+            id="themeToggleBtn"
+            class="p-2 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            title="Đổi giao diện Sáng / Tối"
+          >
+            <i data-lucide="moon" id="themeIconMoon" class="w-5 h-5"></i>
+            <i data-lucide="sun" id="themeIconSun" class="w-5 h-5 hidden text-amber-400"></i>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Khung tìm kiếm trên Mobile (Ẩn/Hiện) -->
+      <div id="mobileSearchBox" class="hidden py-3 border-b border-slate-100 dark:border-slate-800 lg:hidden">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="searchInputMobile"
+            placeholder="Tìm kiếm theo từ khóa bài viết..."
+            class="w-full pl-10 pr-10 py-2 text-sm bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+          >
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+          <button onclick="clearSearch()" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- 3. THANH ĐIỀU HƯỚNG 6 CHUYÊN MỤC TRỌNG TÂM                                -->
+      <!-- ========================================================================= -->
+      <nav class="flex items-center space-x-1 sm:space-x-2 py-2 overflow-x-auto no-scrollbar scroll-smooth">
+        <!-- Tab Tất cả -->
+        <button 
+          onclick="selectCategory('ALL')" 
+          data-category="ALL"
+          class="category-tab active-cat flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs sm:text-sm font-semibold whitespace-nowrap transition bg-red-600 text-white shadow-sm"
+        >
+          <span>Tất cả</span>
+          <span id="badge-count-all" class="text-[10px] bg-white/20 px-1.5 py-0.2 rounded-full">0</span>
+        </button>
+
+        <!-- 1. Thiên tai -->
+        <button 
+          onclick="selectCategory('Thiên tai')" 
+          data-category="Thiên tai"
+          class="category-tab flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+        >
+          <span>🚨 Thiên tai</span>
+          <span id="badge-count-thientai" class="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.2 rounded-full text-slate-700 dark:text-slate-300">0</span>
+        </button>
+
+        <!-- 2. Thời tiết cực đoan -->
+        <button 
+          onclick="selectCategory('Thời tiết cực đoan')" 
+          data-category="Thời tiết cực đoan"
+          class="category-tab flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+        >
+          <span>⛈️ Thời tiết cực đoan</span>
+          <span id="badge-count-thoitiet" class="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.2 rounded-full text-slate-700 dark:text-slate-300">0</span>
+        </button>
+
+        <!-- 3. Tai nạn -->
+        <button 
+          onclick="selectCategory('Tai nạn')" 
+          data-category="Tai nạn"
+          class="category-tab flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+        >
+          <span>⚠️ Tai nạn</span>
+          <span id="badge-count-tainan" class="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.2 rounded-full text-slate-700 dark:text-slate-300">0</span>
+        </button>
+
+        <!-- 4. Chính trị -->
+        <button 
+          onclick="selectCategory('Chính trị')" 
+          data-category="Chính trị"
+          class="category-tab flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+        >
+          <span>🏛️ Chính trị</span>
+          <span id="badge-count-chinhtri" class="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.2 rounded-full text-slate-700 dark:text-slate-300">0</span>
+        </button>
+
+        <!-- 5. Công nghệ AI -->
+        <button 
+          onclick="selectCategory('Công nghệ AI')" 
+          data-category="Công nghệ AI"
+          class="category-tab flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+        >
+          <span>🤖 Công nghệ AI</span>
+          <span id="badge-count-ai" class="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.2 rounded-full text-slate-700 dark:text-slate-300">0</span>
+        </button>
+
+        <!-- 6. Thủ thuật IT -->
+        <button 
+          onclick="selectCategory('Thủ thuật IT')" 
+          data-category="Thủ thuật IT"
+          class="category-tab flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+        >
+          <span>💻 Thủ thuật IT</span>
+          <span id="badge-count-it" class="text-[10px] bg-slate-200 dark:bg-slate-700 px-1.5 py-0.2 rounded-full text-slate-700 dark:text-slate-300">0</span>
+        </button>
+
+        <!-- Tab Tin Đã Lưu (Bookmarks) -->
+        <button 
+          onclick="selectCategory('BOOKMARKS')" 
+          data-category="BOOKMARKS"
+          class="category-tab flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition ml-auto"
+        >
+          <i data-lucide="bookmark" class="w-3.5 h-3.5 fill-current"></i>
+          <span>Đã lưu</span>
+          <span id="badge-count-bookmarks" class="text-[10px] bg-amber-100 dark:bg-amber-900/50 px-1.5 py-0.2 rounded-full text-amber-700 dark:text-amber-300">0</span>
+        </button>
+      </nav>
+
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- 4. KHUNG NỘI DUNG CHÍNH (MAIN CONTAINER)                                  -->
+  <!-- ========================================================================= -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+
+    <!-- HERO SECTION: TIN TIÊU ĐIỂM TRANG NHẤT & TIÊU ĐIỂM BUỔI SÁNG -->
+    <section id="heroSection" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- CỘT TRÁI (8 CỘT): TIN TIÊU ĐIỂM SỐ 1 -->
+      <div class="lg:col-span-8 group">
+        <div id="leadStoryContainer" class="bg-white dark:bg-[#131b2e] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition duration-300 flex flex-col h-full cursor-pointer">
+          <!-- Render động qua JS -->
+        </div>
+      </div>
+
+      <!-- CỘT PHẢI (4 CỘT): TIÊU ĐIỂM ĐỌC NHANH BUỔI SÁNG -->
+      <div class="lg:col-span-4 flex flex-col">
+        <div class="bg-white dark:bg-[#131b2e] rounded-xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-full">
+          <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+            <h2 class="font-serif font-bold text-slate-900 dark:text-white flex items-center text-sm uppercase tracking-wide">
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-500 mr-2"></i>
+              Tiêu Điểm Buổi Sáng
+            </h2>
+            <span class="text-[11px] text-slate-400 font-mono">07:00 AM</span>
+          </div>
+
+          <div id="morningDigestList" class="divide-y divide-slate-100 dark:divide-slate-800/80 flex-1 flex flex-col justify-between space-y-2">
+            <!-- Nạp động qua JS -->
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- THANH BỘ LỌC VÀ TÙY CHỌN HIỂN THỊ -->
+    <section class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-3 border-y border-slate-200 dark:border-slate-800">
+      
+      <!-- Tiêu đề chuyên mục hiện tại -->
+      <div class="flex items-center space-x-2">
+        <h2 id="currentCategoryHeading" class="text-lg sm:text-xl font-bold font-serif text-slate-900 dark:text-white flex items-center">
+          Tất cả tin mới
+        </h2>
+        <span id="filteredCountText" class="text-xs text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+          12 bài viết
+        </span>
+      </div>
+
+      <!-- Tùy chọn lọc nổi bật & Sắp xếp -->
+      <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
+        <!-- Lọc mức độ -->
+        <select 
+          id="prominenceFilter" 
+          onchange="onFilterChange()"
+          aria-label="Lọc theo mức độ tin tức"
+          class="text-xs bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-red-500"
+        >
+          <option value="ALL">Mọi mức độ tin</option>
+          <option value="Tin tiêu điểm">⭐ Tin tiêu điểm</option>
+          <option value="Tin nóng">🔥 Tin nóng</option>
+          <option value="Tin thường">Tin thường</option>
+        </select>
+
+        <!-- Sắp xếp -->
+        <select 
+          id="sortOrder" 
+          onchange="onFilterChange()"
+          aria-label="Sắp xếp danh sách tin bài"
+          class="text-xs bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-red-500"
+        >
+          <option value="NEWEST">Mới nhất</option>
+          <option value="OLDEST">Cũ nhất</option>
+          <option value="TITLE_AZ">Tiêu đề A-Z</option>
+        </select>
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- 5. LƯỚI TIN TỨC ĐA CỘT (MAGAZINE GRID)                                     -->
+    <!-- ========================================================================= -->
+    <section>
+      <!-- Vùng hiển thị thẻ tin -->
+      <div id="articlesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Nạp động qua JS -->
+      </div>
+
+      <!-- Trạng thái trống (Empty State khi không tìm thấy kết quả) -->
+      <div id="emptyState" class="hidden py-16 text-center">
+        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i data-lucide="inbox" class="w-8 h-8"></i>
+        </div>
+        <h3 class="text-base font-semibold text-slate-700 dark:text-slate-300 mb-1">Không tìm thấy bài viết phù hợp</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto">Vui lòng thử tìm với từ khóa khác hoặc chuyển sang danh mục tin tức tổng quan.</p>
+        <button onclick="resetFilters()" class="mt-4 px-4 py-2 text-xs font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition">
+          Xóa bộ lọc & Hiển thị lại tất cả
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- 6. MODAL / DRAWER CHẾ ĐỘ ĐỌC NHANH (QUICK READING MODE & TTS TIẾNG VIỆT)  -->
+  <!-- ========================================================================= -->
+  <div id="readerModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/70 backdrop-blur-sm transition-opacity duration-300">
+    <div class="min-h-screen px-4 text-center flex items-center justify-center py-6 sm:p-0">
+      
+      <!-- Backdrop click to close -->
+      <div class="fixed inset-0 transition-opacity" onclick="closeReaderModal()"></div>
+
+      <!-- Nội dung Modal -->
+      <div class="inline-block w-full max-w-3xl my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-[#131b2e] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-10 relative">
+        
+        <!-- Header Modal & Nút đóng -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
+          <div class="flex items-center space-x-2">
+            <span id="modalCategoryBadge" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300">
+              Chuyên mục
+            </span>
+            <span id="modalSourceBadge" class="text-xs font-medium text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 px-2.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+              Nguồn
+            </span>
+            <span id="modalTimeBadge" class="text-xs text-slate-400 font-mono">
+              Thời gian
+            </span>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <!-- Nút Lưu bài viết -->
+            <button 
+              id="modalBookmarkBtn" 
+              onclick="toggleBookmarkFromModal()"
+              class="p-2 text-slate-500 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition"
+              title="Lưu đọc sau"
+            >
+              <i data-lucide="bookmark" id="modalBookmarkIcon" class="w-5 h-5"></i>
+            </button>
+
+            <!-- Nút Đóng Modal -->
+            <button 
+              onclick="closeReaderModal()"
+              class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition"
+              title="Đóng (ESC)"
+            >
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Thân bài báo -->
+        <div class="px-6 sm:px-8 py-6 space-y-6 max-h-[75vh] overflow-y-auto">
+          
+          <!-- Tiêu đề bài báo lớn -->
+          <h2 id="modalTitle" class="font-serif text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-white leading-snug">
+            Tiêu đề bài báo đầy đủ hiển thị ở đây
+          </h2>
+
+          <!-- BỘ ĐỌC TRÍ TUỆ NHÂN TẠO (WEB SPEECH API TTS TIẾNG VIỆT) -->
+          <div class="bg-gradient-to-r from-red-50 to-amber-50 dark:from-red-950/30 dark:to-amber-950/20 p-4 rounded-xl border border-red-100 dark:border-red-900/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+            
+            <div class="flex items-center space-x-3">
+              <!-- Nút Play / Pause / Stop -->
+              <button 
+                id="ttsPlayBtn" 
+                onclick="toggleSpeechSynthesis()"
+                class="w-10 h-10 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-md transition transform active:scale-95 shrink-0"
+                title="Nghe tóm tắt bài báo"
+              >
+                <i data-lucide="volume-2" id="ttsIcon" class="w-5 h-5"></i>
+              </button>
+              
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Giọng đọc tóm tắt AI (Tiếng Việt)</span>
+                  <span id="ttsStatusPill" class="text-[10px] px-2 py-0.2 bg-white/70 dark:bg-slate-800 rounded-full text-slate-500 border border-slate-200 dark:border-slate-700">
+                    Sẵn sàng
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Nghe nhanh nội dung tóm tắt 2-3 câu qua Web Speech API</p>
+              </div>
+            </div>
+
+            <!-- Tốc độ đọc & Equalizer Animation -->
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
+              <!-- Equalizer animation khi đang phát -->
+              <div id="ttsEqualizer" class="hidden items-end space-x-1 h-5 px-2">
+                <div class="w-1 bg-red-500 rounded-full animate-soundwave"></div>
+                <div class="w-1 bg-red-500 rounded-full animate-soundwave [animation-delay:0.2s]"></div>
+                <div class="w-1 bg-red-500 rounded-full animate-soundwave [animation-delay:0.4s]"></div>
+                <div class="w-1 bg-red-500 rounded-full animate-soundwave [animation-delay:0.1s]"></div>
+              </div>
+
+              <!-- Nút chọn tốc độ đọc -->
+              <div class="flex items-center bg-white dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 text-xs">
+                <button onclick="setTtsRate(0.85)" class="tts-speed-btn px-2 py-1 rounded text-slate-600 dark:text-slate-300 font-medium">0.8x</button>
+                <button onclick="setTtsRate(1.0)" class="tts-speed-btn px-2 py-1 rounded bg-red-600 text-white font-medium">1.0x</button>
+                <button onclick="setTtsRate(1.25)" class="tts-speed-btn px-2 py-1 rounded text-slate-600 dark:text-slate-300 font-medium">1.2x</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Ảnh phóng to -->
+          <div class="relative rounded-xl overflow-hidden aspect-video bg-slate-100 dark:bg-slate-800 shadow-md">
+            <img id="modalImage" src="" alt="Thumbnail bài viết" class="w-full h-full object-cover">
+            <div id="modalProminencePill" class="absolute top-3 left-3 px-3 py-1 bg-red-600 text-white text-xs font-bold uppercase rounded-md shadow">
+              Tin Nóng
+            </div>
+          </div>
+
+          <!-- Nội dung tóm tắt chi tiết (TL;DR) -->
+          <div class="prose dark:prose-invert max-w-none text-slate-700 dark:text-slate-200 text-base leading-relaxed font-serif">
+            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border-l-4 border-red-600 mb-4">
+              <span class="text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400 block mb-1">
+                TÓM TẮT NHANH (TL;DR 2-3 CÂU)
+              </span>
+              <p id="modalTldr" class="editorial-dropcap text-base sm:text-lg text-slate-800 dark:text-slate-100 font-serif leading-relaxed m-0">
+                Đoạn tóm tắt nội dung bài báo...
+              </p>
+            </div>
+          </div>
+
+          <!-- Gợi ý các bài cùng chuyên mục -->
+          <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center">
+              <i data-lucide="layers" class="w-3.5 h-3.5 mr-1.5"></i>
+              Bài viết cùng chuyên mục
+            </h4>
+            <div id="modalRelatedList" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <!-- Nạp động -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer Modal: Nút xem toàn văn tại báo gốc & Chia sẻ -->
+        <div class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 gap-3">
+          <!-- Các nút chia sẻ nhanh -->
+          <div class="flex items-center space-x-2 text-xs text-slate-500">
+            <span>Chia sẻ:</span>
+            <button onclick="shareArticleModal('copy')" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition" title="Sao chép liên kết">
+              <i data-lucide="copy" class="w-4 h-4"></i>
+            </button>
+            <button onclick="shareArticleModal('facebook')" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition" title="Chia sẻ Facebook">
+              <i data-lucide="share-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+
+          <!-- Nút đọc toàn văn tại bài báo gốc -->
+          <a 
+            id="modalOriginalLink" 
+            href="#" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            class="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium text-xs sm:text-sm shadow-md shadow-red-600/20 transition transform active:scale-95"
+          >
+            <span>Đọc toàn văn tại bài báo gốc</span>
+            <i data-lucide="external-link" class="w-4 h-4"></i>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 7. MODAL CẤU HÌNH GOOGLE SHEET & ĐỒNG BỘ DỮ LIỆU                           -->
+  <!-- ========================================================================= -->
+  <div id="sheetConfigModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/70 backdrop-blur-sm transition-opacity duration-300">
+    <div class="min-h-screen px-4 text-center flex items-center justify-center py-6">
+      <div class="fixed inset-0" onclick="closeSheetConfigModal()"></div>
+
+      <div class="inline-block w-full max-w-lg my-8 p-6 text-left align-middle transition-all transform bg-white dark:bg-[#131b2e] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 z-10 relative">
+        
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+              <i data-lucide="table" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Cấu Hình Kết Nối Google Sheet</h3>
+          </div>
+          <button onclick="closeSheetConfigModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="space-y-4 py-4 text-xs">
+          <!-- Hướng dẫn nhanh -->
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p class="font-semibold text-slate-800 dark:text-white mb-1">💡 Hướng dẫn kết nối không bị chặn CORS:</p>
+            <ol class="list-decimal pl-4 space-y-1.5 text-[11px]">
+              <li>Mở file Google Sheet của bạn (tạo từ <b>Code.gs</b>).</li>
+              <li>Bấm nút <b>Chia sẻ (Share)</b> ở góc trên bên phải màn hình.</li>
+              <li>Tại mục <i>Quyền truy cập chung</i>, chọn: <b>"Bất kỳ ai có đường liên kết đều có thể xem" (Anyone with the link can view)</b>.</li>
+              <li>Sao chép <b>toàn bộ đường link trên thanh địa chỉ</b> (ID thường dài 44 ký tự) và dán vào ô bên dưới.</li>
+            </ol>
+            <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700/80 flex items-center justify-between">
+              <span class="text-[10px] text-slate-500">Muốn thử nhanh kết nối?</span>
+              <button 
+                type="button"
+                onclick="fillDemoSheetUrl()" 
+                class="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-950/60 dark:text-red-300 rounded text-[10px] font-semibold transition"
+              >
+                Dán link Sheet kiểm thử mẫu
+              </button>
+            </div>
+          </div>
+
+          <!-- Nhập URL / ID Google Sheet -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block font-semibold text-slate-700 dark:text-slate-300">
+                Đường dẫn (URL) hoặc ID Google Sheet:
+              </label>
+              <span id="sheetIdLengthBadge" class="text-[10px] text-slate-400 font-mono"></span>
+            </div>
+            <input 
+              type="text" 
+              id="inputSheetUrl" 
+              oninput="validateSheetInputLength()"
+              placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit"
+              class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-red-500 font-mono"
+            >
+            <span class="text-[10px] text-slate-400 mt-1 block">Hỗ trợ cả link Google Sheet và link Web App Apps Script (<code>/exec</code>)</span>
+          </div>
+
+          <!-- Nhập Tên Sheet (Tab) -->
+          <div>
+            <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Tên trang tính (Sheet Tab Name):
+            </label>
+            <input 
+              type="text" 
+              id="inputSheetTab" 
+              value="TinTuc"
+              class="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-lg border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-red-500 font-mono"
+            >
+            <span class="text-[10px] text-slate-400 mt-1 block">Mặc định được tạo tự động bởi Apps Script là: <b>TinTuc</b></span>
+          </div>
+
+          <!-- Thông báo phản hồi trạng thái kết nối -->
+          <div id="connectionFeedback" class="hidden p-3 rounded-lg text-[11px] font-medium whitespace-pre-line leading-relaxed"></div>
+
+        </div>
+
+        <!-- Các nút thao tác -->
+        <div class="flex flex-col sm:flex-row items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 gap-2">
+          <button 
+            onclick="resetToSampleData()"
+            class="w-full sm:w-auto px-3 py-2 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
+          >
+            Khôi phục dữ liệu mẫu
+          </button>
+
+          <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+            <button 
+              id="btnTestConnection"
+              onclick="testAndSaveSheetConfig()"
+              class="w-full sm:w-auto px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow transition flex items-center justify-center space-x-1.5"
+            >
+              <i data-lucide="refresh-cw" id="btnSyncSpinner" class="w-3.5 h-3.5"></i>
+              <span>Kiểm Tra & Đồng Bộ Ngay</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 8. TOAST NOTIFICATION                                                     -->
+  <!-- ========================================================================= -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 border border-slate-800 text-xs">
+      <div id="toastIcon" class="text-emerald-400">
+        <i data-lucide="check-circle" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <div id="toastTitle" class="font-semibold">Thông báo</div>
+        <div id="toastMessage" class="text-slate-400 text-[11px]">Nội dung</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 9. FOOTER TÒA SOẠN CHÍNH THỨC                                             -->
+  <!-- ========================================================================= -->
+  <footer class="bg-slate-900 text-slate-400 text-xs border-t border-slate-800 mt-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <!-- Cột 1: Thông tin chung -->
+        <div class="space-y-3 md:col-span-1">
+          <div class="flex items-center space-x-2">
+            <div class="w-7 h-7 bg-red-600 rounded flex items-center justify-center text-white font-bold">
+              <i data-lucide="newspaper" class="w-4 h-4"></i>
+            </div>
+            <span class="font-masthead text-base font-bold text-white uppercase tracking-tight">THỜI BÁO 24H</span>
+          </div>
+          <p class="text-slate-400 text-[11px] leading-relaxed">
+            Hệ thống tổng hợp và phân phối tin tức chuyên ngành tự động hóa 100%, đồng bộ trực tiếp từ Google Sheet & Apps Script Pipeline.
+          </p>
+        </div>
+
+        <!-- Cột 2: 6 Chuyên mục trọng tâm -->
+        <div class="space-y-2">
+          <h4 class="font-bold text-white text-xs uppercase tracking-wider">6 Chuyên Mục Bắt Buộc</h4>
+          <ul class="space-y-1 text-[11px]">
+            <li><a href="javascript:selectCategory('Thiên tai')" class="hover:text-red-400 transition">🚨 Thiên tai & Khẩn cấp</a></li>
+            <li><a href="javascript:selectCategory('Thời tiết cực đoan')" class="hover:text-red-400 transition">⛈️ Thời tiết cực đoan</a></li>
+            <li><a href="javascript:selectCategory('Tai nạn')" class="hover:text-red-400 transition">⚠️ Tai nạn & Cứu nạn</a></li>
+            <li><a href="javascript:selectCategory('Chính trị')" class="hover:text-red-400 transition">🏛️ Chính trị & Thể chế</a></li>
+            <li><a href="javascript:selectCategory('Công nghệ AI')" class="hover:text-red-400 transition">🤖 Công nghệ AI & LLM</a></li>
+            <li><a href="javascript:selectCategory('Thủ thuật IT')" class="hover:text-red-400 transition">💻 Thủ thuật IT & An toàn mạng</a></li>
+          </ul>
+        </div>
+
+        <!-- Cột 3: Nguồn tin & Cơ chế đồng bộ -->
+        <div class="space-y-2">
+          <h4 class="font-bold text-white text-xs uppercase tracking-wider">Mạng Lưới RSS & Backend</h4>
+          <ul class="space-y-1 text-[11px]">
+            <li>• VnExpress, Tuổi Trẻ, Dân Trí, VietnamNet</li>
+            <li>• Cập nhật tự động: 07:00 AM (Hanoi Time)</li>
+            <li>• Giao thức: Google Visualization (GViz JSONP)</li>
+            <li>• Dự phòng: RFC 4180 CSV Fallback Parser</li>
+            <li>• Cơ chế đệm: LocalStorage Offline-First</li>
+          </ul>
+        </div>
+
+        <!-- Cột 4: Trạng thái hệ thống -->
+        <div class="space-y-2">
+          <h4 class="font-bold text-white text-xs uppercase tracking-wider">Tình Trạng Vận Hành</h4>
+          <div class="p-3 rounded-lg bg-slate-800/80 border border-slate-700/60 text-[11px] space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400">Trạng thái:</span>
+              <span class="text-emerald-400 font-semibold flex items-center">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
+                Tự Hành 100%
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400">Giờ cập nhật:</span>
+              <span class="text-slate-200 font-mono">07:00 AM Hàng ngày</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-400">Múi giờ:</span>
+              <span class="text-slate-200">Asia/Ho_Chi_Minh (GMT+7)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-2">
+        <p>© 2026 Cổng Tin Tức Điện Tử Tự Hành - Bản quyền phát triển với Antigravity.</p>
+        <p class="font-mono text-slate-400">Single Page Application • 100% Pure Vanilla JS & Tailwind CSS</p>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- ========================================================================= -->
+  <!-- 10. TOÀN BỘ LOGIC VANILLA JAVASCRIPT ES6+                                 -->
+  <!-- ========================================================================= -->
+  <script>
+    /**
+     * =========================================================================
+     * APP STATE & CONFIGURATION
+     * =========================================================================
+     */
+    const STORAGE_KEY_ARTICLES = 'news_portal_articles_v2';
+    const STORAGE_KEY_BOOKMARKS = 'news_portal_bookmarks_v2';
+    const STORAGE_KEY_SHEET_URL = 'news_portal_sheet_url_v2';
+    const STORAGE_KEY_SHEET_TAB = 'news_portal_sheet_tab_v2';
+    const STORAGE_KEY_THEME = 'news_portal_theme_v2';
+    const STORAGE_KEY_LAST_SYNC = 'news_portal_last_sync_v2';
+
+    // 18 bài viết mẫu phong phú thực tế (3 bài cho mỗi chuyên mục trong 6 chuyên mục)
+    // Đảm bảo trang web hiển thị hoàn chỉnh, lung linh ngay từ lần tải đầu tiên!
+    const DEFAULT_SAMPLE_ARTICLES = [
+      // 1. THIÊN TAI
+      {
+        stt: 1,
+        publishedAt: "21/10/2026 06:45",
+        category: "Thiên tai",
+        title: "Bão số 7 giật cấp 14 tiến sát vùng biển miền Trung, các tỉnh khẩn cấp sơ tán dân",
+        tldr: "Theo Trung tâm Dự báo Khí tượng Thủy văn Quốc gia, bão số 7 đang di chuyển nhanh với sức gió giật cấp 14, hướng vào các tỉnh từ Quảng Bình đến Đà Nẵng. Ban chỉ đạo Phòng thủ dân sự quốc gia đã ban hành công điện hỏa tốc, chỉ đạo các địa phương cấm biển từ 12h trưa nay và hoàn tất sơ tán người dân vùng trũng thấp.",
+        source: "VnExpress",
+        link: "https://vnexpress.net/thoi-su",
+        thumbnail: "https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin tiêu điểm"
+      },
+      {
+        stt: 2,
+        publishedAt: "21/10/2026 05:15",
+        category: "Thiên tai",
+        title: "Triều cường sông Sài Gòn vượt mức báo động 3, nhiều tuyến đường ven sông ngập sâu nửa mét",
+        tldr: "Đỉnh triều sáng nay trên sông Sài Gòn tại trạm Phú An đạt mức 1,72m, gây ngập cục bộ tại các khu vực trũng như đường Trần Xuân Soạn (Quận 7) và Quốc lộ 50. Các trạm bơm công suất lớn đã được vận hành liên tục để tiêu thoát nước hỗ trợ người dân di chuyển đi làm đầu ngày.",
+        source: "Tuổi Trẻ",
+        link: "https://tuoitre.vn/thoi-su.htm",
+        thumbnail: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin thường"
+      },
+      {
+        stt: 3,
+        publishedAt: "20/10/2026 21:30",
+        category: "Thiên tai",
+        title: "Cảnh báo nguy cơ lũ quét và sạt lở đất nghiêm trọng tại các huyện miền núi Tây Bắc",
+        tldr: "Mưa lớn kéo dài liên tục 48 giờ qua khiến độ ẩm đất tại Yên Bái, Lào Cai và Sơn La đã đạt trạng thái bão hòa trên 85%. Cơ quan khí tượng phát đi cảnh báo cấp độ rủi ro thiên tai cấp 2 do lũ quét trên các sông suối nhỏ và sạt trượt đất đá taluy đường giao thông.",
+        source: "Dân Trí",
+        link: "https://dantri.com.vn/xa-hoi.htm",
+        thumbnail: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin nóng"
+      },
+
+      // 2. THỜI TIẾT CỰC ĐOAN
+      {
+        stt: 4,
+        publishedAt: "21/10/2026 06:30",
+        category: "Thời tiết cực đoan",
+        title: "Bắc Bộ đón đợt không khí lạnh mạnh nhất từ đầu mùa, nhiệt độ vùng núi hạ dưới 5 độ C",
+        tldr: "Khối không khí lạnh tăng cường với cường độ mạnh đang tràn xuống các tỉnh miền Bắc, khiến nhiệt độ tại Hà Nội giảm sâu xuống 14-16 độ C. Các đỉnh núi cao như Fansipan, Mẫu Sơn có khả năng xuất hiện sương muối và băng giá trong hai đêm tới.",
+        source: "Tuổi Trẻ",
+        link: "https://tuoitre.vn/thoi-su.htm",
+        thumbnail: "https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin nóng"
+      },
+      {
+        stt: 5,
+        publishedAt: "21/10/2026 05:00",
+        category: "Thời tiết cực đoan",
+        title: "Tia cực tím (UV) chạm ngưỡng cực đại 10.5 tại Nam Bộ, khuyến cáo hạn chế ra đường buổi trưa",
+        tldr: "Chỉ số bức xạ tia cực tím tại TP.HCM và các tỉnh đồng bằng sông Cửu Long duy trì ở mức rất nguy hại (từ 9.5 đến 10.5) trong khung giờ 11h - 14h. Ngành y tế cảnh báo nguy cơ gây bỏng da, tổn thương giác mạc và say nắng nếu tiếp xúc trực tiếp với ánh nắng mà không có đồ bảo hộ.",
+        source: "VnExpress",
+        link: "https://vnexpress.net/thoi-su",
+        thumbnail: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin thường"
+      },
+      {
+        stt: 6,
+        publishedAt: "20/10/2026 19:40",
+        category: "Thời tiết cực đoan",
+        title: "Mưa đá kèm lốc xoáy quét qua vùng cao nguyên, làm hư hại hàng chục hecta hoa màu",
+        tldr: "Một trận mưa đá bất thường kéo dài 20 phút kèm theo lốc giật trên cấp 9 đã quét qua khu vực ngoại ô Đà Lạt chiều muộn hôm qua. Hàng chục hecta nhà kính trồng hoa công nghệ cao và rau sạch bị thủng mái, chính quyền địa phương đang thống kê hỗ trợ bà con khắc phục thiệt hại.",
+        source: "VietnamNet",
+        link: "https://vietnamnet.vn/thoi-su",
+        thumbnail: "https://images.unsplash.com/photo-1516912481808-3406841bd33c?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin thường"
+      },
+
+      // 3. TAI NẠN
+      {
+        stt: 7,
+        publishedAt: "21/10/2026 05:45",
+        category: "Tai nạn",
+        title: "Dập tắt vụ hỏa hoạn tại xưởng gỗ khu công nghiệp Bình Dương, giải cứu an toàn 15 công nhân",
+        tldr: "Đến 5h sáng nay, lực lượng Cảnh sát PCCC và CNCH Công an tỉnh Bình Dương đã khống chế hoàn toàn vụ cháy lớn bùng phát lúc rạng sáng tại xưởng chế biến gỗ xuất khẩu. Nhờ triển khai kịp thời phương án chia cắt đám cháy, 15 công nhân mắc kẹt đã được hướng dẫn thoát ra ngoài an toàn, không có thương vong về người.",
+        source: "Dân Trí",
+        link: "https://dantri.com.vn/xa-hoi.htm",
+        thumbnail: "https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin tiêu điểm"
+      },
+      {
+        stt: 8,
+        publishedAt: "21/10/2026 04:15",
+        category: "Tai nạn",
+        title: "Cứu hộ thành công tàu cá cùng 12 ngư dân trôi dạt trên vùng biển Trường Sa sau sự cố hỏng máy",
+        tldr: "Tàu cứu nạn chuyên dụng SAR 413 đã tiếp cận và lai dắt an toàn tàu cá mang biển số Quảng Ngãi về âu tàu đảo Song Tử Tây. Toàn bộ 12 ngư dân trên tàu đều có sức khỏe ổn định sau 36 giờ chống chọi với sóng to gió lớn do máy tàu bị gãy trục chân vịt giữa biển.",
+        source: "VietnamNet",
+        link: "https://vietnamnet.vn/thoi-su",
+        thumbnail: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin nóng"
+      },
+      {
+        stt: 9,
+        publishedAt: "20/10/2026 22:10",
+        category: "Tai nạn",
+        title: "Va chạm liên hoàn giữa 4 ô tô trên cao tốc Phan Thiết - Dầu Giây, giao thông tê liệt nhiều giờ",
+        tldr: "Vụ va chạm liên hoàn giữa xe container và 3 ô tô con xảy ra tại Km 45 cao tốc hướng về TP.HCM trong điều kiện trời mưa trơn trượt. Lực lượng CSGT Đội 6 đã kịp thời có mặt phân luồng từ nút giao Xuân Lộc, cứu nạn 2 tài xế bị kẹt nhẹ trong cabin và giải tỏa hiện trường.",
+        source: "Thanh Niên",
+        link: "https://thanhnien.vn/thoi-su.htm",
+        thumbnail: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin thường"
+      },
+
+      // 4. CHÍNH TRỊ
+      {
+        stt: 10,
+        publishedAt: "21/10/2026 06:00",
+        category: "Chính trị",
+        title: "Khai mạc trọng thể Kỳ họp thứ 12 Quốc hội khóa XV: Xem xét thông qua 10 dự án luật cải cách",
+        tldr: "Sáng nay, Quốc hội khóa XV khai mạc Kỳ họp thứ 12 tại Nhà Quốc hội, Hà Nội. Kỳ họp dự kiến kéo dài 25 ngày để thảo luận về kế hoạch phát triển kinh tế - xã hội, hoàn thiện thể chế chuyển đổi số quốc gia và thông qua các nghị quyết then chốt về phân cấp phân quyền cho chính quyền cơ sở.",
+        source: "VietnamNet",
+        link: "https://vietnamnet.vn/thoi-su",
+        thumbnail: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin tiêu điểm"
+      },
+      {
+        stt: 11,
+        publishedAt: "21/10/2026 04:00",
+        category: "Chính trị",
+        title: "Chính phủ ban hành Chỉ thị mới về thúc đẩy phát triển công nghiệp bán dẫn và kinh tế xanh",
+        tldr: "Thủ tướng Chính phủ vừa ký ban hành Chỉ thị yêu cầu các bộ ngành, địa phương ưu tiên bố trí nguồn vốn tín dụng ưu đãi và quỹ đất công nghiệp cho các dự án thiết kế vi mạch bán dẫn. Mục tiêu đưa Việt Nam trở thành trung tâm đào tạo nhân lực bán dẫn hàng đầu khu vực vào năm 2030.",
+        source: "Dân Trí",
+        link: "https://dantri.com.vn/xa-hoi.htm",
+        thumbnail: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin nóng"
+      },
+      {
+        stt: 12,
+        publishedAt: "20/10/2026 18:20",
+        category: "Chính trị",
+        title: "Việt Nam và đối tác quốc tế ký kết hiệp định hợp tác đối ngoại đa phương về chuyển dịch năng lượng",
+        tldr: "Tại trụ sở Bộ Ngoại giao, đại diện Chính phủ Việt Nam cùng các phái đoàn quốc tế đã hoàn tất ký kết hiệp định khung về hỗ trợ kỹ thuật và tài chính xanh. Thỏa thuận mở ra gói đầu tư trị giá hàng tỷ USD dành cho hạ tầng truyền tải điện gió ngoài khơi và năng lượng hydro xanh.",
+        source: "Tuổi Trẻ",
+        link: "https://tuoitre.vn/thoi-su.htm",
+        thumbnail: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin thường"
+      },
+
+      // 5. CÔNG NGHỆ AI
+      {
+        stt: 13,
+        publishedAt: "21/10/2026 06:15",
+        category: "Công nghệ AI",
+        title: "Google DeepMind công bố thế hệ mô hình suy luận đa phương thức mới với khả năng tự lập trình vượt trội",
+        tldr: "Google DeepMind vừa chính thức giới thiệu đột phá mới trong kiến trúc mô hình AI thế hệ tiếp theo, tích hợp khả năng suy luận chuỗi tư duy thời gian thực. Hệ thống đạt kỷ lục mới tại các kỳ thi toán quốc tế và benchmark lập trình phức tạp, đánh dấu bước nhảy vọt của AI tạo sinh năm 2026.",
+        source: "TechCrunch",
+        link: "https://techcrunch.com/category/artificial-intelligence/",
+        thumbnail: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin tiêu điểm"
+      },
+      {
+        stt: 14,
+        publishedAt: "21/10/2026 04:45",
+        category: "Công nghệ AI",
+        title: "Nghị viện thông qua Khung pháp lý toàn diện kiểm soát rủi ro các hệ thống AI tự hành cấp độ cao",
+        tldr: "Sau nhiều phiên điều trần, bộ quy chuẩn quản lý đạo đức và an toàn AI toàn diện chính thức có hiệu lực từ đầu quý 4. Quy định mới bắt buộc các tập đoàn công nghệ phải dán nhãn nội dung do AI tạo ra và kiểm toán độc lập về an toàn dữ liệu đối với mô hình có hơn 100 tỷ tham số.",
+        source: "Arxiv",
+        link: "https://arxiv.org/",
+        thumbnail: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin nóng"
+      },
+      {
+        stt: 15,
+        publishedAt: "20/10/2026 20:00",
+        category: "Công nghệ AI",
+        title: "Thế hệ Robot hình người tích hợp chip AI xử lý tại biên chính thức được ứng dụng vào sản xuất ô tô",
+        tldr: "Hãng sản xuất ô tô điện hàng đầu thế giới đã đưa 500 robot hình người tích hợp bộ vi xử lý AI cục bộ vào dây chuyền lắp ráp pin và kiểm định chất lượng quang học. Nhờ thị giác máy tính và cảm biến lực xúc giác cực nhạy, robot giúp giảm 40% sai sót lắp ráp cơ khí.",
+        source: "VnExpress",
+        link: "https://vnexpress.net/so-hoa",
+        thumbnail: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin thường"
+      },
+
+      // 6. THỦ THUẬT IT
+      {
+        stt: 16,
+        publishedAt: "21/10/2026 05:30",
+        category: "Thủ thuật IT",
+        title: "Phát hiện lỗ hổng Zero-day trên Windows 11: Chuyên gia an ninh mạng khuyến cáo cập nhật khẩn cấp",
+        tldr: "Cục An toàn thông tin phát đi cảnh báo về lỗ hổng thực thi mã từ xa nghiêm trọng đang bị tin tặc khai thác trên các phiên bản hệ điều hành máy tính phổ biến. Người dùng và quản trị viên hệ thống cần nhanh chóng áp dụng bản vá bảo mật KB mới nhất và vô hiệu hóa các giao thức chia sẻ file không an toàn.",
+        source: "Thanh Niên",
+        link: "https://thanhnien.vn/cong-nghe.htm",
+        thumbnail: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin nóng"
+      },
+      {
+        stt: 17,
+        publishedAt: "21/10/2026 04:30",
+        category: "Thủ thuật IT",
+        title: "10 mẹo tối ưu hóa RAM và tăng tốc khởi động máy tính Windows, macOS không cần cài thêm phần mềm",
+        tldr: "Bài viết hướng dẫn chi tiết cách quản lý các dịch vụ ngầm khởi động cùng máy, dọn dẹp bộ nhớ tạm đệm cache hệ thống và tinh chỉnh phân bổ luồng CPU cho ứng dụng nặng. Các bước thực hiện hoàn toàn dựa trên công cụ quản trị có sẵn giúp máy tính hoạt động mượt mà hơn 35%.",
+        source: "VnExpress Số Hóa",
+        link: "https://vnexpress.net/so-hoa",
+        thumbnail: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin thường"
+      },
+      {
+        stt: 18,
+        publishedAt: "20/10/2026 17:15",
+        category: "Thủ thuật IT",
+        title: "Hướng dẫn kích hoạt chuẩn Passkey bảo mật không cần mật khẩu cho tài khoản Google, GitHub",
+        tldr: "Passkey dựa trên chuẩn FIDO2 đang dần thay thế hoàn toàn mật khẩu truyền thống và OTP SMS dễ bị lừa đảo qua mạng. Bài viết hướng dẫn chi tiết cách thiết lập Passkey đồng bộ qua vân tay, FaceID trên điện thoại để đăng nhập tài khoản an toàn chỉ trong 3 giây.",
+        source: "Tuổi Trẻ",
+        link: "https://tuoitre.vn/nhip-song-so.htm",
+        thumbnail: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80",
+        prominence: "Tin thường"
+      }
+    ];
+
+    // State ứng dụng
+    let articles = [];
+    let currentCategory = 'ALL';
+    let searchQuery = '';
+    let selectedProminence = 'ALL';
+    let selectedSort = 'NEWEST';
+    let bookmarks = new Set();
+    let currentModalArticle = null;
+
+    // Web Speech API State
+    let speechSynth = window.speechSynthesis;
+    let speechUtterance = null;
+    let isSpeaking = false;
+    let ttsRate = 1.0;
+    let vietnameseVoice = null;
+
+    /**
+     * =========================================================================
+     * KHỞI TẠO HỆ THỐNG KHI LOAD TRANG
+     * =========================================================================
+     */
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. Khởi tạo Giao diện Tối/Sáng
+      initTheme();
+
+      // 2. Cập nhật ngày tháng và đồng hồ thời gian thực
+      updateCurrentDate();
+      setInterval(updateLiveClock, 1000);
+      updateLiveClock();
+
+      // 3. Nạp danh sách tin đã lưu (Bookmarks) từ LocalStorage
+      loadBookmarks();
+
+      // 4. Nạp dữ liệu bài viết (Offline-first LocalStorage hoặc Sample Data)
+      loadInitialArticles();
+
+      // 5. Cài đặt các phím tắt và tìm kiếm
+      setupKeyboardShortcuts();
+
+      // 6. Tự động kiểm tra và đồng bộ ngầm nếu người dùng đã cấu hình Sheet URL
+      silentlySyncFromSheetIfConfigured();
+
+      // 7. Khởi tạo giọng đọc Web Speech API
+      initSpeechVoice();
+
+      // Khởi tạo icon Lucide
+      if (window.lucide) lucide.createIcons();
+    });
+
+    /**
+     * =========================================================================
+     * QUẢN LÝ DỮ LIỆU & BỘ NHỚ LOCALSTORAGE
+     * =========================================================================
+     */
+    function loadInitialArticles() {
+      try {
+        const cached = localStorage.getItem(STORAGE_KEY_ARTICLES);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            articles = parsed;
+            updateSyncStatusDisplay(true, "Đã tải từ bộ đệm (LocalStorage)");
+          } else {
+            articles = [...DEFAULT_SAMPLE_ARTICLES];
+          }
+        } else {
+          articles = [...DEFAULT_SAMPLE_ARTICLES];
+          localStorage.setItem(STORAGE_KEY_ARTICLES, JSON.stringify(articles));
+        }
+      } catch (e) {
+        console.warn("Lỗi khi đọc LocalStorage:", e);
+        articles = [...DEFAULT_SAMPLE_ARTICLES];
+      }
+
+      renderAll();
+    }
+
+    function loadBookmarks() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY_BOOKMARKS);
+        if (saved) {
+          bookmarks = new Set(JSON.parse(saved));
+        }
+      } catch (e) {
+        bookmarks = new Set();
+      }
+      updateBookmarksBadge();
+    }
+
+    function saveBookmarks() {
+      localStorage.setItem(STORAGE_KEY_BOOKMARKS, JSON.stringify([...bookmarks]));
+      updateBookmarksBadge();
+    }
+
+    function toggleBookmark(articleLink, event) {
+      if (event) event.stopPropagation();
+      if (bookmarks.has(articleLink)) {
+        bookmarks.delete(articleLink);
+        showToast("Đã bỏ lưu", "Đã xóa bài viết khỏi danh sách đọc sau.", "info");
+      } else {
+        bookmarks.add(articleLink);
+        showToast("Đã lưu bài viết", "Bài viết đã được lưu vào mục Đã lưu để đọc sau.", "success");
+      }
+      saveBookmarks();
+      renderAll();
+
+      if (currentModalArticle && currentModalArticle.link === articleLink) {
+        updateModalBookmarkUI();
+      }
+    }
+
+    /**
+     * =========================================================================
+     * KẾT NỐI VÀ ĐỒNG BỘ DỮ LIỆU GOOGLE SHEET (GVIZ JSONP & APPS SCRIPT WEB APP)
+     * =========================================================================
+     */
+    let currentActiveGvizCallback = null;
+
+    // Thiết lập sẵn bộ hook toàn cục cho Google Visualization API
+    // Đảm bảo dù Google trả về callback tùy biến hay setResponse mặc định thì code vẫn bắt được 100%
+    window.google = window.google || {};
+    window.google.visualization = window.google.visualization || {};
+    window.google.visualization.Query = window.google.visualization.Query || {};
+    window.google.visualization.Query.setResponse = function(response) {
+      if (currentActiveGvizCallback && typeof window[currentActiveGvizCallback] === 'function') {
+        window[currentActiveGvizCallback](response);
+      }
+    };
+
+    function extractSpreadsheetInfo(input) {
+      if (!input) return null;
+      input = input.trim();
+
+      // Trường hợp 1: Người dùng dán link Web App của Google Apps Script
+      if (input.includes('script.google.com/macros/s/')) {
+        return { type: 'webapp', url: input };
+      }
+
+      // Trường hợp 2: Link Google Sheet đầy đủ (https://docs.google.com/spreadsheets/d/1xxxx/edit...)
+      const match = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      if (match && match[1]) {
+        return { type: 'sheet', id: match[1] };
+      }
+
+      // Trường hợp 3: Người dùng dán trực tiếp ID
+      if (/^[a-zA-Z0-9-_]{20,70}$/.test(input)) {
+        return { type: 'sheet', id: input };
+      }
+
+      return null;
+    }
+
+    function validateSheetInputLength() {
+      const inputEl = document.getElementById('inputSheetUrl');
+      const badgeEl = document.getElementById('sheetIdLengthBadge');
+      if (!inputEl || !badgeEl) return;
+
+      const val = inputEl.value.trim();
+      if (!val) {
+        badgeEl.textContent = '';
+        return;
+      }
+
+      const info = extractSpreadsheetInfo(val);
+      if (!info) {
+        badgeEl.textContent = '❌ Link không hợp lệ';
+        badgeEl.className = 'text-[10px] text-red-500 font-medium';
+        return;
+      }
+
+      if (info.type === 'webapp') {
+        badgeEl.textContent = '✓ Apps Script Web App';
+        badgeEl.className = 'text-[10px] text-emerald-500 font-medium';
+        return;
+      }
+
+      const len = info.id.length;
+      if (len < 35) {
+        badgeEl.textContent = `⚠️ ID ngắn (${len}/44 ký tự - có thể thiếu)`;
+        badgeEl.className = 'text-[10px] text-amber-500 font-medium';
+      } else {
+        badgeEl.textContent = `✓ ID chuẩn (${len} ký tự)`;
+        badgeEl.className = 'text-[10px] text-emerald-500 font-medium';
+      }
+    }
+
+    function fillDemoSheetUrl() {
+      const input = document.getElementById('inputSheetUrl');
+      const tab = document.getElementById('inputSheetTab');
+      if (input) input.value = 'https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit';
+      if (tab) tab.value = 'Class Data';
+      validateSheetInputLength();
+      showFeedback(true, 'Đã điền link bảng tính kiểm thử mẫu. Bạn có thể bấm "Kiểm Tra & Đồng Bộ Ngay" để xem thử nghiệm.');
+    }
+
+    function silentlySyncFromSheetIfConfigured() {
+      const savedUrl = localStorage.getItem(STORAGE_KEY_SHEET_URL);
+      const info = extractSpreadsheetInfo(savedUrl);
+      if (info) {
+        fetchSheetData(info, false);
+      }
+    }
+
+    function fetchSheetData(targetInfo, isManualTrigger = false) {
+      const tabName = (localStorage.getItem(STORAGE_KEY_SHEET_TAB) || 'TinTuc').trim();
+      updateSyncStatusDisplay('loading', 'Đang kết nối Google Sheet...');
+
+      const callbackName = 'onGvizResponse_' + Math.floor(Math.random() * 1000000);
+      currentActiveGvizCallback = callbackName;
+
+      let timeoutHandle = null;
+      let requestResolved = false;
+
+      function cleanup() {
+        const oldScript = document.getElementById('gviz_script_tag');
+        if (oldScript) oldScript.remove();
+        delete window[callbackName];
+        currentActiveGvizCallback = null;
+      }
+
+      // Đăng ký callback động nhận kết quả
+      window[callbackName] = function(response) {
+        requestResolved = true;
+        clearTimeout(timeoutHandle);
+        cleanup();
+
+        if (targetInfo.type === 'webapp') {
+          handleWebAppResponse(response, isManualTrigger);
+        } else {
+          handleGvizResponse(response, isManualTrigger, tabName);
+        }
+      };
+
+      // Xây dựng URL truy vấn không bị chặn CORS
+      let scriptUrl = '';
+      if (targetInfo.type === 'webapp') {
+        const separator = targetInfo.url.includes('?') ? '&' : '?';
+        scriptUrl = `${targetInfo.url}${separator}callback=${callbackName}&_=${Date.now()}`;
+      } else {
+        // Cú pháp chuẩn của Google Visualization: responseHandler:callbackName (dùng dấu hai chấm :)
+        scriptUrl = `https://docs.google.com/spreadsheets/d/${targetInfo.id}/gviz/tq?tqx=out:json;responseHandler:${callbackName}&sheet=${encodeURIComponent(tabName)}&tq=${encodeURIComponent('select *')}&_=${Date.now()}`;
+      }
+
+      const script = document.createElement('script');
+      script.id = 'gviz_script_tag';
+      script.src = scriptUrl;
+
+      script.onerror = function() {
+        if (!requestResolved) {
+          clearTimeout(timeoutHandle);
+          cleanup();
+          handleConnectionError(targetInfo, isManualTrigger);
+        }
+      };
+
+      document.body.appendChild(script);
+
+      // Timeout 10 giây
+      timeoutHandle = setTimeout(() => {
+        if (!requestResolved) {
+          cleanup();
+          handleConnectionError(targetInfo, isManualTrigger, true);
+        }
+      }, 10000);
+    }
+
+    function handleConnectionError(targetInfo, isManualTrigger, isTimeout = false) {
+      updateSyncStatusDisplay(false, "Lỗi kết nối");
+
+      if (!isManualTrigger) return;
+
+      if (targetInfo.type === 'sheet') {
+        const idLen = targetInfo.id ? targetInfo.id.length : 0;
+        if (idLen < 35) {
+          showFeedback(false, `❌ LỖI: ĐƯỜNG LINK BẢNG TÍNH BỊ THIẾU KÝ TỰ!\n\n• ID bạn nhập hiện chỉ có ${idLen} ký tự (ví dụ kết thúc bằng "${targetInfo.id.slice(-8)}").\n• Một ID Google Sheet chuẩn luôn dài khoảng 44 ký tự.\n• Cách sửa: Hãy mở Google Sheet trên trình duyệt, bấm chuột vào thanh địa chỉ URL, nhấn Ctrl+A (chọn toàn bộ) -> Ctrl+C (sao chép) rồi dán lại vào ô bên trên.`);
+          return;
+        }
+
+        if (isTimeout) {
+          showFeedback(false, `⏳ KẾT NỐI BỊ TIMEOUT (QUÁ 10 GIÂY):\n\n• Vui lòng kiểm tra lại kết nối mạng internet.\n• Đảm bảo Google Sheet đã mở quyền "Bất kỳ ai có đường liên kết đều có thể xem".`);
+          return;
+        }
+
+        showFeedback(false, `❌ KHÔNG THỂ TRUY CẬP GOOGLE SHEET:\n\n1. Kiểm tra quyền chia sẻ: Mở Google Sheet -> Bấm nút [Chia sẻ] (góc trên bên phải) -> Đổi thành "Bất kỳ ai có đường liên kết đều có thể xem" (Anyone with the link can view).\n2. Kiểm tra tên Tab: Mặc định trong Code.gs là "TinTuc", hãy kiểm tra xem tên tab trên Sheet có đúng không.\n3. Nếu bạn đã tạo Web App trong Apps Script, bạn cũng có thể dán link Web App (/exec) vào đây.`);
+      } else {
+        showFeedback(false, `❌ Không thể kết nối tới Google Apps Script Web App. Hãy đảm bảo bạn đã chọn "Execute as: Me" và "Who has access: Anyone" khi triển khai Web App.`);
+      }
+    }
+
+    function handleGvizResponse(response, isManualTrigger, tabName) {
+      try {
+        if (!response || !response.table || !response.table.rows) {
+          throw new Error(`Cấu trúc bảng Google Sheet không hợp lệ hoặc trang tính "${tabName}" đang rỗng.`);
+        }
+
+        const rows = response.table.rows;
+        const parsedArticles = [];
+
+        for (let i = 0; i < rows.length; i++) {
+          const c = rows[i].c;
+          if (!c) continue;
+
+          // Lấy giá trị ô an toàn
+          const getVal = (colIdx) => {
+            if (!c[colIdx]) return "";
+            if (c[colIdx].f !== null && c[colIdx].f !== undefined) return String(c[colIdx].f).trim();
+            if (c[colIdx].v !== null && c[colIdx].v !== undefined) return String(c[colIdx].v).trim();
+            return "";
+          };
+
+          // Tìm tiêu đề và link
+          let title = getVal(3);
+          let link = getVal(6);
+          let category = getVal(2);
+
+          // Nếu sheet kiểm thử mẫu hoặc cấu trúc hơi khác: tìm dòng có chữ
+          if (!title) {
+            title = getVal(1) || getVal(0);
+          }
+          if (!link) {
+            link = `https://news.google.com?q=${encodeURIComponent(title)}`;
+          }
+
+          if (title && title !== "Tiêu đề bài báo" && title !== "STT") {
+            parsedArticles.push({
+              stt: parseInt(getVal(0)) || (i + 1),
+              publishedAt: getVal(1) || formatDateNow(),
+              category: category || "Công nghệ AI",
+              title: title,
+              tldr: getVal(4) || title,
+              source: getVal(5) || "Báo chí",
+              link: link,
+              thumbnail: getVal(7) || getFallbackImage(category),
+              prominence: getVal(8) || "Tin thường"
+            });
+          }
+        }
+
+        if (parsedArticles.length === 0) {
+          throw new Error(`Trang tính "${tabName}" không có dữ liệu tin bài hợp lệ. Vui lòng chạy hàm tuDongTongHopTinTucHangNgay() trong Code.gs trước.`);
+        }
+
+        // Cập nhật State & Lưu LocalStorage
+        articles = parsedArticles;
+        localStorage.setItem(STORAGE_KEY_ARTICLES, JSON.stringify(articles));
+        const nowStr = formatTimeNow();
+        localStorage.setItem(STORAGE_KEY_LAST_SYNC, nowStr);
+
+        updateSyncStatusDisplay(true, `Đã đồng bộ lúc ${nowStr}`);
+        renderAll();
+
+        if (isManualTrigger) {
+          showFeedback(true, `🎉 KẾT NỐI THÀNH CÔNG RỰC RỠ!\nĐã đồng bộ ${parsedArticles.length} bài báo mới nhất từ Google Sheet.`);
+          showToast("Đồng bộ thành công", `Đã cập nhật ${parsedArticles.length} tin tức từ Google Sheet lúc ${nowStr}`, "success");
+        }
+      } catch (err) {
+        console.error("Lỗi xử lý GViz:", err);
+        updateSyncStatusDisplay(false, "Lỗi dữ liệu Sheet");
+        if (isManualTrigger) {
+          showFeedback(false, `❌ Lỗi xử lý dữ liệu: ${err.message}\n\nHãy đảm bảo bạn đã chạy hàm chayThuNghiemNgay() trong Code.gs để tạo bảng dữ liệu chuẩn.`);
+        }
+      }
+    }
+
+    function handleWebAppResponse(response, isManualTrigger) {
+      try {
+        if (!response || !response.data || !Array.isArray(response.data)) {
+          throw new Error("Dữ liệu trả về từ Apps Script Web App không đúng định dạng.");
+        }
+
+        const rawList = response.data;
+        const parsedArticles = [];
+
+        for (let i = 0; i < rawList.length; i++) {
+          const item = rawList[i];
+          if (!item.title) continue;
+
+          parsedArticles.push({
+            stt: item.stt || (i + 1),
+            publishedAt: item.publishedAt || formatDateNow(),
+            category: item.category || "Công nghệ AI",
+            title: item.title,
+            tldr: item.tldr || item.title,
+            source: item.source || "Báo chí",
+            link: item.link || "#",
+            thumbnail: item.thumbnail || getFallbackImage(item.category),
+            prominence: item.prominence || "Tin thường"
+          });
+        }
+
+        articles = parsedArticles;
+        localStorage.setItem(STORAGE_KEY_ARTICLES, JSON.stringify(articles));
+        const nowStr = formatTimeNow();
+        localStorage.setItem(STORAGE_KEY_LAST_SYNC, nowStr);
+
+        updateSyncStatusDisplay(true, `Đã đồng bộ Web App lúc ${nowStr}`);
+        renderAll();
+
+        if (isManualTrigger) {
+          showFeedback(true, `🎉 KẾT NỐI WEB APP THÀNH CÔNG!\nĐã tải ${parsedArticles.length} bài báo từ Google Cloud.`);
+          showToast("Đồng bộ thành công", `Đã tải ${parsedArticles.length} bài báo từ Web App`, "success");
+        }
+      } catch (err) {
+        updateSyncStatusDisplay(false, "Lỗi Web App");
+        if (isManualTrigger) {
+          showFeedback(false, `Lỗi xử lý Web App: ${err.message}`);
+        }
+      }
+    }
+
+    /**
+     * Resilient CSV Parser tuân thủ RFC 4180 (xử lý an toàn dấu phẩy và xuống dòng trong ngoặc kép)
+     */
+    function parseCSV(text) {
+      const rows = [];
+      let currentRow = [];
+      let currentField = '';
+      let insideQuote = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        const next = text[i + 1];
+
+        if (c === '"') {
+          if (insideQuote && next === '"') {
+            currentField += '"';
+            i++; // Skip escaped quote
+          } else {
+            insideQuote = !insideQuote;
+          }
+        } else if (c === ',' && !insideQuote) {
+          currentRow.push(currentField);
+          currentField = '';
+        } else if ((c === '\r' || c === '\n') && !insideQuote) {
+          if (c === '\r' && next === '\n') {
+            i++;
+          }
+          currentRow.push(currentField);
+          if (currentRow.length > 1 || currentRow[0] !== '') {
+            rows.push(currentRow);
+          }
+          currentRow = [];
+          currentField = '';
+        } else {
+          currentField += c;
+        }
+      }
+
+      if (currentField || currentRow.length > 0) {
+        currentRow.push(currentField);
+        rows.push(currentRow);
+      }
+
+      return rows;
+    }
+
+    /**
+     * =========================================================================
+     * THUẬT TOÁN LỌC, TÌM KIẾM & RENDER GIAO DIỆN
+     * =========================================================================
+     */
+    function getFilteredArticles() {
+      return articles.filter(art => {
+        // 1. Lọc theo chuyên mục
+        if (currentCategory === 'BOOKMARKS') {
+          if (!bookmarks.has(art.link)) return false;
+        } else if (currentCategory !== 'ALL') {
+          if (art.category !== currentCategory) return false;
+        }
+
+        // 2. Lọc theo mức độ nổi bật
+        if (selectedProminence !== 'ALL') {
+          if (art.prominence !== selectedProminence) return false;
+        }
+
+        // 3. Tìm kiếm theo từ khóa (Tiêu đề, Tóm tắt, Nguồn)
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          const matchTitle = (art.title || '').toLowerCase().includes(q);
+          const matchTldr = (art.tldr || '').toLowerCase().includes(q);
+          const matchSource = (art.source || '').toLowerCase().includes(q);
+          if (!matchTitle && !matchTldr && !matchSource) return false;
+        }
+
+        return true;
+      });
+    }
+
+    function getSortedArticles(items) {
+      const arr = [...items];
+      if (selectedSort === 'NEWEST') {
+        arr.sort((a, b) => (b.stt || 0) - (a.stt || 0));
+      } else if (selectedSort === 'OLDEST') {
+        arr.sort((a, b) => (a.stt || 0) - (b.stt || 0));
+      } else if (selectedSort === 'TITLE_AZ') {
+        arr.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      }
+      return arr;
+    }
+
+    function renderAll() {
+      updateCategoryBadges();
+      renderHeroSection();
+      renderBreakingTicker();
+      renderGrid();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderBreakingTicker() {
+      const marqueeEl = document.getElementById('breakingNewsMarquee');
+      if (!marqueeEl) return;
+
+      const breaking = articles.filter(a => a.prominence === 'Tin tiêu điểm' || a.prominence === 'Tin nóng');
+      const list = breaking.length > 0 ? breaking : articles.slice(0, 5);
+
+      if (list.length === 0) {
+        marqueeEl.innerHTML = '<span class="px-6 flex items-center">Chưa có tin tức mới</span>';
+        return;
+      }
+
+      // Lặp 2 lần để hiệu ứng marquee vô tận mượt mà
+      const itemsHtml = [...list, ...list].map(item => `
+        <span class="inline-flex items-center px-4 hover:underline" onclick="event.stopPropagation(); openReaderModal('${escapeHtml(item.link)}')">
+          <span class="text-yellow-300 font-bold mr-2 text-xs">● [${item.category}]</span>
+          <span>${escapeHtml(item.title)}</span>
+          <span class="text-red-300 ml-2 font-mono text-[11px]">(${item.publishedAt.split(' ')[1] || ''})</span>
+        </span>
+      `).join('<span class="text-red-400 font-bold">|</span>');
+
+      marqueeEl.innerHTML = itemsHtml;
+    }
+
+    function renderHeroSection() {
+      const leadContainer = document.getElementById('leadStoryContainer');
+      const digestContainer = document.getElementById('morningDigestList');
+
+      if (!leadContainer || !digestContainer) return;
+
+      // 1. Chọn bài viết tiêu điểm (Ưu tiên 'Tin tiêu điểm', hoặc bài đầu tiên)
+      let leadStory = articles.find(a => a.prominence === 'Tin tiêu điểm') || articles[0];
+
+      if (!leadStory) {
+        leadContainer.innerHTML = '<div class="p-8 text-center text-slate-400">Không có bài viết tiêu điểm</div>';
+        digestContainer.innerHTML = '';
+        return;
+      }
+
+      const isBookmarked = bookmarks.has(leadStory.link);
+      const catColor = getCategoryColorClasses(leadStory.category);
+
+      leadContainer.onclick = () => openReaderModal(leadStory.link);
+      leadContainer.innerHTML = `
+        <div class="relative aspect-video sm:aspect-[21/9] overflow-hidden bg-slate-100 dark:bg-slate-800">
+          <img 
+            src="${leadStory.thumbnail}" 
+            alt="${escapeHtml(leadStory.title)}" 
+            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            loading="lazy"
+            onerror="this.src='${getFallbackImage(leadStory.category)}'"
+          >
+          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+          
+          <div class="absolute top-4 left-4 flex flex-wrap gap-2">
+            <span class="px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wider bg-red-600 text-white shadow-md">
+              ⭐ TIN TIÊU ĐIỂM TRANG NHẤT
+            </span>
+            <span class="px-2.5 py-1 rounded-md text-xs font-semibold ${catColor.badge}">
+              ${leadStory.category}
+            </span>
+          </div>
+
+          <button 
+            onclick="toggleBookmark('${escapeHtml(leadStory.link)}', event)"
+            class="absolute top-4 right-4 p-2.5 rounded-full bg-black/40 hover:bg-black/70 text-white backdrop-blur-sm transition"
+            title="${isBookmarked ? 'Bỏ lưu' : 'Lưu đọc sau'}"
+          >
+            <i data-lucide="bookmark" class="w-4 h-4 ${isBookmarked ? 'fill-amber-400 text-amber-400' : ''}"></i>
+          </button>
+        </div>
+
+        <div class="p-5 sm:p-6 flex-1 flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <span class="font-bold text-red-600 dark:text-red-400">${leadStory.source}</span>
+              <span>•</span>
+              <span class="font-mono">${leadStory.publishedAt}</span>
+              <span>•</span>
+              <span>Ước tính: 2 phút đọc</span>
+            </div>
+
+            <h2 class="font-serif text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition leading-snug">
+              ${escapeHtml(leadStory.title)}
+            </h2>
+
+            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-serif leading-relaxed clamp-3">
+              ${escapeHtml(leadStory.tldr)}
+            </p>
+          </div>
+
+          <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+            <span class="text-xs font-semibold text-red-600 dark:text-red-400 flex items-center group-hover:translate-x-1 transition duration-200">
+              Đọc bản tin đầy đủ <i data-lucide="arrow-right" class="w-3.5 h-3.5 ml-1"></i>
+            </span>
+            <button 
+              onclick="event.stopPropagation(); speakText('${escapeHtml(leadStory.tldr)}')" 
+              class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-slate-700 text-xs transition"
+              title="Nghe tóm tắt"
+            >
+              <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+              <span>Nghe TL;DR</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      // 2. Chọn 3-4 bài cho Tiêu điểm buổi sáng (khác bài leadStory)
+      const morningArticles = articles.filter(a => a.link !== leadStory.link).slice(0, 4);
+      digestContainer.innerHTML = morningArticles.map(art => {
+        const catCol = getCategoryColorClasses(art.category);
+        return `
+          <div 
+            onclick="openReaderModal('${escapeHtml(art.link)}')"
+            class="py-2.5 flex items-start space-x-3 group/item cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 p-2 rounded-lg transition"
+          >
+            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-800">
+              <img 
+                src="${art.thumbnail}" 
+                alt="${escapeHtml(art.title)}" 
+                class="w-full h-full object-cover group-hover/item:scale-105 transition duration-300"
+                loading="lazy"
+                onerror="this.src='${getFallbackImage(art.category)}'"
+              >
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center space-x-1.5 mb-1">
+                <span class="text-[10px] font-semibold px-2 py-0.2 rounded ${catCol.badge}">
+                  ${art.category}
+                </span>
+                <span class="text-[10px] text-slate-400 font-mono">
+                  ${art.publishedAt.split(' ')[1] || ''}
+                </span>
+              </div>
+              <h3 class="font-serif text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 group-hover/item:text-red-600 dark:group-hover/item:text-red-400 clamp-2 leading-snug">
+                ${escapeHtml(art.title)}
+              </h3>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderGrid() {
+      const gridEl = document.getElementById('articlesGrid');
+      const emptyStateEl = document.getElementById('emptyState');
+      const headingEl = document.getElementById('currentCategoryHeading');
+      const countEl = document.getElementById('filteredCountText');
+
+      const filtered = getFilteredArticles();
+      const sorted = getSortedArticles(filtered);
+
+      // Cập nhật tiêu đề chuyên mục và số lượng
+      headingEl.textContent = getCategoryDisplayName(currentCategory);
+      countEl.textContent = `${sorted.length} bài viết`;
+
+      if (sorted.length === 0) {
+        gridEl.innerHTML = '';
+        emptyStateEl.classList.remove('hidden');
+        return;
+      }
+
+      emptyStateEl.classList.add('hidden');
+
+      gridEl.innerHTML = sorted.map(art => {
+        const isBookmarked = bookmarks.has(art.link);
+        const catCol = getCategoryColorClasses(art.category);
+        const isHot = art.prominence === 'Tin tiêu điểm' || art.prominence === 'Tin nóng';
+
+        return `
+          <article 
+            onclick="openReaderModal('${escapeHtml(art.link)}')"
+            class="bg-white dark:bg-[#131b2e] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col group cursor-pointer"
+          >
+            <!-- Card Thumbnail -->
+            <div class="relative aspect-video overflow-hidden bg-slate-100 dark:bg-slate-800">
+              <img 
+                src="${art.thumbnail}" 
+                alt="${escapeHtml(art.title)}" 
+                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+                onerror="this.src='${getFallbackImage(art.category)}'"
+              >
+              
+              <!-- Badges -->
+              <div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded ${catCol.badge}">
+                  ${art.category}
+                </span>
+                ${isHot ? `
+                  <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-red-600 text-white shadow">
+                    🔥 ${art.prominence}
+                  </span>
+                ` : ''}
+              </div>
+
+              <!-- Nút bookmark nổi -->
+              <button 
+                onclick="toggleBookmark('${escapeHtml(art.link)}', event)"
+                class="absolute top-3 right-3 p-2 rounded-full bg-black/40 hover:bg-black/70 text-white backdrop-blur-sm transition"
+                title="${isBookmarked ? 'Bỏ lưu' : 'Lưu đọc sau'}"
+              >
+                <i data-lucide="bookmark" class="w-3.5 h-3.5 ${isBookmarked ? 'fill-amber-400 text-amber-400' : ''}"></i>
+              </button>
+            </div>
+
+            <!-- Card Body -->
+            <div class="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3">
+              <div>
+                <!-- Nguồn & Thời gian -->
+                <div class="flex items-center space-x-2 text-[11px] text-slate-500 dark:text-slate-400 font-medium mb-2">
+                  <span class="text-red-600 dark:text-red-400 font-semibold">${art.source}</span>
+                  <span>•</span>
+                  <span class="font-mono">${art.publishedAt}</span>
+                </div>
+
+                <!-- Tiêu đề -->
+                <h3 class="font-serif text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition leading-snug clamp-2">
+                  ${escapeHtml(art.title)}
+                </h3>
+
+                <!-- Tóm tắt TL;DR -->
+                <p class="text-xs text-slate-600 dark:text-slate-300 font-serif leading-relaxed mt-2 clamp-3">
+                  ${escapeHtml(art.tldr)}
+                </p>
+              </div>
+
+              <!-- Footer của Card -->
+              <div class="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                <button 
+                  onclick="event.stopPropagation(); speakText('${escapeHtml(art.tldr)}')"
+                  class="flex items-center space-x-1 text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition text-[11px]"
+                  title="Nghe tóm tắt"
+                >
+                  <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+                  <span>Nghe</span>
+                </button>
+
+                <span class="text-slate-400 font-medium text-[11px] flex items-center group-hover:text-red-600 transition">
+                  Chi tiết <i data-lucide="chevron-right" class="w-3.5 h-3.5 ml-0.5"></i>
+                </span>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function updateCategoryBadges() {
+      const getCount = (cat) => articles.filter(a => a.category === cat).length;
+
+      document.getElementById('badge-count-all').textContent = articles.length;
+      document.getElementById('badge-count-thientai').textContent = getCount('Thiên tai');
+      document.getElementById('badge-count-thoitiet').textContent = getCount('Thời tiết cực đoan');
+      document.getElementById('badge-count-tainan').textContent = getCount('Tai nạn');
+      document.getElementById('badge-count-chinhtri').textContent = getCount('Chính trị');
+      document.getElementById('badge-count-ai').textContent = getCount('Công nghệ AI');
+      document.getElementById('badge-count-it').textContent = getCount('Thủ thuật IT');
+      document.getElementById('badge-count-bookmarks').textContent = bookmarks.size;
+    }
+
+    function updateBookmarksBadge() {
+      const el = document.getElementById('badge-count-bookmarks');
+      if (el) el.textContent = bookmarks.size;
+    }
+
+    function selectCategory(cat) {
+      currentCategory = cat;
+
+      // Cập nhật tab active
+      document.querySelectorAll('.category-tab').forEach(tab => {
+        const tabCat = tab.getAttribute('data-category');
+        if (tabCat === cat) {
+          tab.classList.add('bg-red-600', 'text-white', 'shadow-sm');
+          tab.classList.remove('text-slate-600', 'dark:text-slate-300', 'hover:bg-slate-100');
+        } else {
+          tab.classList.remove('bg-red-600', 'text-white', 'shadow-sm');
+          tab.classList.add('text-slate-600', 'dark:text-slate-300', 'hover:bg-slate-100');
+        }
+      });
+
+      renderGrid();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function onFilterChange() {
+      selectedProminence = document.getElementById('prominenceFilter').value;
+      selectedSort = document.getElementById('sortOrder').value;
+      renderGrid();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function resetFilters() {
+      currentCategory = 'ALL';
+      searchQuery = '';
+      selectedProminence = 'ALL';
+      selectedSort = 'NEWEST';
+
+      const sDesk = document.getElementById('searchInputDesktop');
+      const sMob = document.getElementById('searchInputMobile');
+      if (sDesk) sDesk.value = '';
+      if (sMob) sMob.value = '';
+
+      document.getElementById('prominenceFilter').value = 'ALL';
+      document.getElementById('sortOrder').value = 'NEWEST';
+
+      selectCategory('ALL');
+    }
+
+    /**
+     * =========================================================================
+     * MODAL CHẾ ĐỘ ĐỌC NHANH (QUICK READING MODE)
+     * =========================================================================
+     */
+    function openReaderModal(link) {
+      const art = articles.find(a => a.link === link);
+      if (!art) return;
+
+      currentModalArticle = art;
+
+      document.getElementById('modalTitle').textContent = art.title;
+      document.getElementById('modalTldr').textContent = art.tldr;
+      document.getElementById('modalCategoryBadge').textContent = art.category;
+      document.getElementById('modalSourceBadge').textContent = art.source;
+      document.getElementById('modalTimeBadge').textContent = art.publishedAt;
+      document.getElementById('modalImage').src = art.thumbnail;
+      document.getElementById('modalOriginalLink').href = art.link;
+
+      const prominenceEl = document.getElementById('modalProminencePill');
+      if (art.prominence && art.prominence !== 'Tin thường') {
+        prominenceEl.textContent = art.prominence;
+        prominenceEl.classList.remove('hidden');
+      } else {
+        prominenceEl.classList.add('hidden');
+      }
+
+      updateModalBookmarkUI();
+      renderRelatedArticles(art);
+
+      // Reset TTS khi mở bài mới
+      stopSpeechSynthesis();
+
+      document.getElementById('readerModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeReaderModal() {
+      stopSpeechSynthesis();
+      document.getElementById('readerModal').classList.add('hidden');
+      document.body.style.overflow = '';
+      currentModalArticle = null;
+    }
+
+    function updateModalBookmarkUI() {
+      if (!currentModalArticle) return;
+      const isSaved = bookmarks.has(currentModalArticle.link);
+      const icon = document.getElementById('modalBookmarkIcon');
+      if (icon) {
+        if (isSaved) {
+          icon.classList.add('fill-amber-400', 'text-amber-400');
+        } else {
+          icon.classList.remove('fill-amber-400', 'text-amber-400');
+        }
+      }
+    }
+
+    function toggleBookmarkFromModal() {
+      if (!currentModalArticle) return;
+      toggleBookmark(currentModalArticle.link);
+    }
+
+    function renderRelatedArticles(currentArt) {
+      const container = document.getElementById('modalRelatedList');
+      if (!container) return;
+
+      const related = articles
+        .filter(a => a.category === currentArt.category && a.link !== currentArt.link)
+        .slice(0, 2);
+
+      if (related.length === 0) {
+        container.innerHTML = '<span class="text-xs text-slate-400 col-span-2">Không có bài viết liên quan khác trong chuyên mục này.</span>';
+        return;
+      }
+
+      container.innerHTML = related.map(item => `
+        <div 
+          onclick="openReaderModal('${escapeHtml(item.link)}')"
+          class="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-red-500 dark:hover:border-red-500 flex items-center space-x-3 cursor-pointer transition bg-slate-50/50 dark:bg-slate-800/30"
+        >
+          <img src="${item.thumbnail}" alt="" class="w-12 h-12 rounded object-cover shrink-0" onerror="this.src='${getFallbackImage(item.category)}'">
+          <div class="min-w-0">
+            <h5 class="font-serif text-xs font-bold text-slate-800 dark:text-slate-100 clamp-2">${escapeHtml(item.title)}</h5>
+            <span class="text-[10px] text-slate-400 font-mono">${item.publishedAt}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openLeadOrBreakingStory() {
+      const target = articles.find(a => a.prominence === 'Tin tiêu điểm') || articles[0];
+      if (target) openReaderModal(target.link);
+    }
+
+    function shareArticleModal(type) {
+      if (!currentModalArticle) return;
+      const url = currentModalArticle.link;
+      const title = currentModalArticle.title;
+
+      if (type === 'copy') {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(url);
+          showToast("Đã sao chép liên kết", url, "success");
+        } else {
+          prompt("Sao chép liên kết bài báo:", url);
+        }
+      } else if (type === 'facebook') {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank');
+      }
+    }
+
+    /**
+     * =========================================================================
+     * BỘ ĐỌC TRÍ TUỆ NHÂN TẠO (WEB SPEECH API TTS TIẾNG VIỆT)
+     * =========================================================================
+     */
+    function initSpeechVoice() {
+      if (!('speechSynthesis' in window)) {
+        console.warn("Trình duyệt không hỗ trợ Web Speech API.");
+        return;
+      }
+
+      function loadVoices() {
+        const voices = speechSynth.getVoices();
+        // Ưu tiên tìm giọng tiếng Việt chuẩn (vi-VN hoặc vi)
+        vietnameseVoice = voices.find(v => v.lang === 'vi-VN' || v.lang.startsWith('vi')) || null;
+        if (vietnameseVoice) {
+          console.log("Đã phát hiện giọng đọc Tiếng Việt:", vietnameseVoice.name);
+        }
+      }
+
+      loadVoices();
+      if (speechSynth.onvoiceschanged !== undefined) {
+        speechSynth.onvoiceschanged = loadVoices;
+      }
+    }
+
+    function speakText(text) {
+      if (!('speechSynthesis' in window)) {
+        alert("Rất tiếc, trình duyệt của bạn không hỗ trợ tính năng Web Speech API.");
+        return;
+      }
+
+      stopSpeechSynthesis();
+
+      speechUtterance = new SpeechSynthesisUtterance(text);
+      speechUtterance.rate = ttsRate;
+      speechUtterance.lang = 'vi-VN';
+
+      if (vietnameseVoice) {
+        speechUtterance.voice = vietnameseVoice;
+      }
+
+      speechUtterance.onstart = () => {
+        isSpeaking = true;
+        updateTtsUI(true);
+      };
+
+      speechUtterance.onend = () => {
+        isSpeaking = false;
+        updateTtsUI(false);
+      };
+
+      speechUtterance.onerror = () => {
+        isSpeaking = false;
+        updateTtsUI(false);
+      };
+
+      speechSynth.speak(speechUtterance);
+    }
+
+    function toggleSpeechSynthesis() {
+      if (!currentModalArticle) return;
+      if (isSpeaking) {
+        stopSpeechSynthesis();
+      } else {
+        speakText(currentModalArticle.tldr);
+      }
+    }
+
+    function stopSpeechSynthesis() {
+      if (speechSynth && speechSynth.speaking) {
+        speechSynth.cancel();
+      }
+      isSpeaking = false;
+      updateTtsUI(false);
+    }
+
+    function setTtsRate(rate) {
+      ttsRate = rate;
+      document.querySelectorAll('.tts-speed-btn').forEach(btn => {
+        if (btn.textContent.includes(rate + 'x')) {
+          btn.classList.add('bg-red-600', 'text-white');
+          btn.classList.remove('text-slate-600', 'dark:text-slate-300');
+        } else {
+          btn.classList.remove('bg-red-600', 'text-white');
+          btn.classList.add('text-slate-600', 'dark:text-slate-300');
+        }
+      });
+
+      if (isSpeaking && currentModalArticle) {
+        speakText(currentModalArticle.tldr);
+      }
+    }
+
+    function updateTtsUI(speaking) {
+      const eq = document.getElementById('ttsEqualizer');
+      const pill = document.getElementById('ttsStatusPill');
+      const icon = document.getElementById('ttsIcon');
+
+      if (!pill || !icon) return;
+
+      if (speaking) {
+        if (eq) eq.classList.remove('hidden'), eq.classList.add('flex');
+        pill.textContent = 'Đang đọc...';
+        pill.className = 'text-[10px] px-2 py-0.2 bg-red-100 dark:bg-red-950/80 rounded-full text-red-600 font-bold';
+        icon.setAttribute('data-lucide', 'square');
+      } else {
+        if (eq) eq.classList.add('hidden'), eq.classList.remove('flex');
+        pill.textContent = 'Sẵn sàng';
+        pill.className = 'text-[10px] px-2 py-0.2 bg-white/70 dark:bg-slate-800 rounded-full text-slate-500 border border-slate-200 dark:border-slate-700';
+        icon.setAttribute('data-lucide', 'volume-2');
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    /**
+     * =========================================================================
+     * MODAL CẤU HÌNH GOOGLE SHEET
+     * =========================================================================
+     */
+    function openSheetConfigModal() {
+      const inputUrl = document.getElementById('inputSheetUrl');
+      const inputTab = document.getElementById('inputSheetTab');
+      const feedback = document.getElementById('connectionFeedback');
+
+      inputUrl.value = localStorage.getItem(STORAGE_KEY_SHEET_URL) || '';
+      inputTab.value = localStorage.getItem(STORAGE_KEY_SHEET_TAB) || 'TinTuc';
+      feedback.className = 'hidden';
+
+      validateSheetInputLength();
+
+      document.getElementById('sheetConfigModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeSheetConfigModal() {
+      document.getElementById('sheetConfigModal').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function testAndSaveSheetConfig() {
+      const urlVal = document.getElementById('inputSheetUrl').value.trim();
+      const tabVal = document.getElementById('inputSheetTab').value.trim() || 'TinTuc';
+
+      if (!urlVal) {
+        showFeedback(false, "Vui lòng nhập đường dẫn (URL) hoặc ID của Google Sheet.");
+        return;
+      }
+
+      const targetInfo = extractSpreadsheetInfo(urlVal);
+      if (!targetInfo) {
+        showFeedback(false, "Đường dẫn không hợp lệ. Vui lòng kiểm tra lại URL Google Sheet hoặc link Web App.");
+        return;
+      }
+
+      // Kiểm tra độ dài ID nếu là Google Sheet
+      if (targetInfo.type === 'sheet' && targetInfo.id.length < 35) {
+        showFeedback(false, `❌ CẢNH BÁO: ID Google Sheet bị thiếu ký tự!\n\n• ID bạn nhập hiện có: ${targetInfo.id.length} ký tự.\n• Một ID Google Sheet chuẩn luôn dài khoảng 44 ký tự.\n• Hãy sao chép lại toàn bộ đường dẫn trên thanh địa chỉ trình duyệt.`);
+        return;
+      }
+
+      localStorage.setItem(STORAGE_KEY_SHEET_URL, urlVal);
+      localStorage.setItem(STORAGE_KEY_SHEET_TAB, tabVal);
+
+      showFeedback(true, "Đang kết nối thử nghiệm đến Google Sheet...");
+      fetchSheetData(targetInfo, true);
+    }
+
+    function resetToSampleData() {
+      localStorage.removeItem(STORAGE_KEY_SHEET_URL);
+      localStorage.removeItem(STORAGE_KEY_SHEET_TAB);
+      articles = [...DEFAULT_SAMPLE_ARTICLES];
+      localStorage.setItem(STORAGE_KEY_ARTICLES, JSON.stringify(articles));
+
+      updateSyncStatusDisplay(true, "Dữ liệu mẫu tòa soạn");
+      renderAll();
+      closeSheetConfigModal();
+      showToast("Khôi phục thành công", "Đã nạp lại 18 bài viết mẫu phong phú.", "info");
+    }
+
+    function showFeedback(isSuccess, message) {
+      const fb = document.getElementById('connectionFeedback');
+      fb.classList.remove('hidden');
+      if (isSuccess) {
+        fb.className = 'p-3 rounded-lg text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
+      } else {
+        fb.className = 'p-3 rounded-lg text-[11px] font-medium bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800';
+      }
+      fb.textContent = message;
+    }
+
+    function updateSyncStatusDisplay(state, text) {
+      const statusText = document.getElementById('syncStatusText');
+      const statusDot = document.getElementById('syncStatusDot');
+      const statusPulse = document.getElementById('syncStatusPulse');
+
+      if (!statusText) return;
+
+      if (state === 'loading') {
+        statusText.textContent = text;
+        statusDot.className = 'relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500';
+        statusPulse.className = 'animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75';
+      } else if (state === true) {
+        statusText.textContent = text;
+        statusDot.className = 'relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500';
+        statusPulse.className = 'animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75';
+      } else {
+        statusText.textContent = text;
+        statusDot.className = 'relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500';
+        statusPulse.className = 'hidden';
+      }
+    }
+
+    /**
+     * =========================================================================
+     * TIỆN ÍCH GIAO DIỆN, NGÀY THÁNG, PHÍM TẮT & TOAST
+     * =========================================================================
+     */
+    function initTheme() {
+      const savedTheme = localStorage.getItem(STORAGE_KEY_THEME);
+      const isDark = savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      applyTheme(isDark);
+    }
+
+    function toggleDarkMode() {
+      const isCurrentlyDark = document.documentElement.classList.contains('dark');
+      applyTheme(!isCurrentlyDark);
+      localStorage.setItem(STORAGE_KEY_THEME, !isCurrentlyDark ? 'dark' : 'light');
+    }
+
+    function applyTheme(isDark) {
+      const moon = document.getElementById('themeIconMoon');
+      const sun = document.getElementById('themeIconSun');
+
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        if (moon) moon.classList.add('hidden');
+        if (sun) sun.classList.remove('hidden');
+      } else {
+        document.documentElement.classList.remove('dark');
+        if (moon) moon.classList.remove('hidden');
+        if (sun) sun.classList.add('hidden');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function updateCurrentDate() {
+      const now = new Date();
+      const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+      const dayName = days[now.getDay()];
+      const day = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear();
+
+      const el = document.getElementById('currentDateText');
+      if (el) el.textContent = `${dayName}, ngày ${day}/${month}/${year}`;
+    }
+
+    function updateLiveClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      const el = document.getElementById('liveClock');
+      if (el) el.textContent = `${h}:${m}:${s}`;
+    }
+
+    function setupKeyboardShortcuts() {
+      // Phím tắt / để mở ô tìm kiếm
+      window.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          const desk = document.getElementById('searchInputDesktop');
+          if (desk) desk.focus();
+        } else if (e.key === 'Escape') {
+          closeReaderModal();
+          closeSheetConfigModal();
+        }
+      });
+
+      // Lắng nghe sự kiện tìm kiếm
+      const deskInput = document.getElementById('searchInputDesktop');
+      const mobInput = document.getElementById('searchInputMobile');
+
+      const handleSearch = (val) => {
+        searchQuery = val.trim();
+        renderGrid();
+      };
+
+      if (deskInput) {
+        deskInput.addEventListener('input', (e) => handleSearch(e.target.value));
+      }
+      if (mobInput) {
+        mobInput.addEventListener('input', (e) => handleSearch(e.target.value));
+      }
+    }
+
+    function toggleMobileSearch() {
+      const box = document.getElementById('mobileSearchBox');
+      const mobInput = document.getElementById('searchInputMobile');
+      if (box.classList.contains('hidden')) {
+        box.classList.remove('hidden');
+        mobInput.focus();
+      } else {
+        box.classList.add('hidden');
+      }
+    }
+
+    function clearSearch() {
+      searchQuery = '';
+      const desk = document.getElementById('searchInputDesktop');
+      const mob = document.getElementById('searchInputMobile');
+      if (desk) desk.value = '';
+      if (mob) mob.value = '';
+      renderGrid();
+    }
+
+    function showToast(title, msg, type = 'success') {
+      const toast = document.getElementById('toastNotification');
+      const titleEl = document.getElementById('toastTitle');
+      const msgEl = document.getElementById('toastMessage');
+      const iconEl = document.getElementById('toastIcon');
+
+      titleEl.textContent = title;
+      msgEl.textContent = msg;
+
+      if (type === 'success') {
+        iconEl.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>';
+      } else if (type === 'info') {
+        iconEl.innerHTML = '<i data-lucide="info" class="w-5 h-5 text-sky-400"></i>';
+      } else {
+        iconEl.innerHTML = '<i data-lucide="alert-circle" class="w-5 h-5 text-red-400"></i>';
+      }
+      if (window.lucide) lucide.createIcons();
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3500);
+    }
+
+    function getCategoryColorClasses(category) {
+      switch (category) {
+        case 'Thiên tai':
+          return { badge: 'bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300 border border-red-200 dark:border-red-800' };
+        case 'Thời tiết cực đoan':
+          return { badge: 'bg-sky-100 text-sky-700 dark:bg-sky-950/80 dark:text-sky-300 border border-sky-200 dark:border-sky-800' };
+        case 'Tai nạn':
+          return { badge: 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800' };
+        case 'Chính trị':
+          return { badge: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800' };
+        case 'Công nghệ AI':
+          return { badge: 'bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 border border-purple-200 dark:border-purple-800' };
+        case 'Thủ thuật IT':
+          return { badge: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' };
+        default:
+          return { badge: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700' };
+      }
+    }
+
+    function getFallbackImage(category) {
+      const map = {
+        "Thiên tai": "https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=1200&q=80",
+        "Thời tiết cực đoan": "https://images.unsplash.com/photo-1534088568595-a066f410bcda?auto=format&fit=crop&w=1200&q=80",
+        "Tai nạn": "https://images.unsplash.com/photo-1582139329536-e7284fece509?auto=format&fit=crop&w=1200&q=80",
+        "Chính trị": "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80",
+        "Công nghệ AI": "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=80",
+        "Thủ thuật IT": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80"
+      };
+      return map[category] || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80";
+    }
+
+    function getCategoryDisplayName(cat) {
+      const map = {
+        'ALL': 'Tất cả tin mới hôm nay',
+        'Thiên tai': '🚨 Chuyên mục: Thiên tai & Cứu nạn khẩn cấp',
+        'Thời tiết cực đoan': '⛈️ Chuyên mục: Thời tiết cực đoan & Cảnh báo',
+        'Tai nạn': '⚠️ Chuyên mục: Sự cố, Giao thông & Cứu hộ',
+        'Chính trị': '🏛️ Chuyên mục: Chính trị, Thể chế & Điều hành',
+        'Công nghệ AI': '🤖 Chuyên mục: Trí tuệ nhân tạo & Mô hình ngôn ngữ',
+        'Thủ thuật IT': '💻 Chuyên mục: Thủ thuật IT, Bảo mật & Công nghệ',
+        'BOOKMARKS': '⭐ Danh sách bài viết đã lưu đọc sau'
+      };
+      return map[cat] || cat;
+    }
+
+    function formatDateNow() {
+      const d = new Date();
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      const h = String(d.getHours()).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      return `${day}/${month}/${year} ${h}:${m}`;
+    }
+
+    function formatTimeNow() {
+      const d = new Date();
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
