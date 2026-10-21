@@ -531,47 +531,59 @@
             Tiêu đề bài báo đầy đủ hiển thị ở đây
           </h2>
 
-          <!-- BỘ ĐỌC TRÍ TUỆ NHÂN TẠO (WEB SPEECH API TTS TIẾNG VIỆT) -->
-          <div class="bg-gradient-to-r from-red-50 to-amber-50 dark:from-red-950/30 dark:to-amber-950/20 p-4 rounded-xl border border-red-100 dark:border-red-900/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <!-- BỘ ĐỌC TRÍ TUỆ NHÂN TẠO (WEB SPEECH VIETNAMESE & 3-TIER FALLBACK) -->
+          <div class="bg-gradient-to-r from-red-50 via-amber-50 to-orange-50 dark:from-red-950/40 dark:via-amber-950/30 dark:to-orange-950/20 p-4 rounded-xl border border-red-200/80 dark:border-red-900/50 flex flex-col space-y-3 shadow-sm">
             
-            <div class="flex items-center space-x-3">
-              <!-- Nút Play / Pause / Stop -->
-              <button 
-                id="ttsPlayBtn" 
-                onclick="toggleSpeechSynthesis()"
-                class="w-10 h-10 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-md transition transform active:scale-95 shrink-0"
-                title="Nghe tóm tắt bài báo"
-              >
-                <i data-lucide="volume-2" id="ttsIcon" class="w-5 h-5"></i>
-              </button>
-              
-              <div>
-                <div class="flex items-center space-x-2">
-                  <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Giọng đọc tóm tắt AI (Tiếng Việt)</span>
-                  <span id="ttsStatusPill" class="text-[10px] px-2 py-0.2 bg-white/70 dark:bg-slate-800 rounded-full text-slate-500 border border-slate-200 dark:border-slate-700">
-                    Sẵn sàng
-                  </span>
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div class="flex items-center space-x-3 w-full sm:w-auto">
+                <!-- Nút Play / Pause / Stop -->
+                <button 
+                  id="ttsPlayBtn" 
+                  onclick="toggleSpeechSynthesis()"
+                  class="w-11 h-11 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center shadow-lg shadow-red-600/30 transition transform active:scale-95 shrink-0"
+                  title="Nghe phát thanh viên đọc bản tin"
+                >
+                  <i data-lucide="volume-2" id="ttsIcon" class="w-5 h-5"></i>
+                </button>
+                
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                    <span class="text-xs font-bold text-slate-900 dark:text-white flex items-center">
+                      <span class="w-2 h-2 rounded-full bg-red-500 mr-1.5 animate-pulse"></span>
+                      Phát Thanh Viên AI (Tiếng Việt)
+                    </span>
+                    <span id="ttsStatusPill" class="text-[10px] px-2 py-0.5 bg-white dark:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-semibold shadow-xs">
+                      Sẵn sàng
+                    </span>
+                  </div>
+                  <p id="ttsVoiceInfo" class="text-[11px] text-slate-600 dark:text-slate-400 truncate mt-0.5 font-medium">
+                    Đang nạp bộ giọng tiếng Việt chuẩn...
+                  </p>
                 </div>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">Nghe nhanh nội dung tóm tắt 2-3 câu qua Web Speech API</p>
+              </div>
+
+              <!-- Tốc độ đọc & Equalizer Animation -->
+              <div class="flex items-center space-x-3 w-full sm:w-auto justify-end shrink-0">
+                <!-- Equalizer animation khi đang phát -->
+                <div id="ttsEqualizer" class="hidden items-end space-x-1 h-5 px-2">
+                  <div class="w-1 bg-red-500 rounded-full animate-soundwave"></div>
+                  <div class="w-1 bg-red-500 rounded-full animate-soundwave [animation-delay:0.2s]"></div>
+                  <div class="w-1 bg-red-500 rounded-full animate-soundwave [animation-delay:0.4s]"></div>
+                  <div class="w-1 bg-red-500 rounded-full animate-soundwave [animation-delay:0.1s]"></div>
+                </div>
+
+                <!-- Nút chọn tốc độ đọc -->
+                <div class="flex items-center bg-white dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 text-xs shadow-xs">
+                  <button onclick="setTtsRate(0.85)" class="tts-speed-btn px-2.5 py-1 rounded text-slate-600 dark:text-slate-300 font-medium hover:text-red-600 transition">0.8x</button>
+                  <button onclick="setTtsRate(1.0)" class="tts-speed-btn px-2.5 py-1 rounded bg-red-600 text-white font-medium shadow-xs">1.0x</button>
+                  <button onclick="setTtsRate(1.25)" class="tts-speed-btn px-2.5 py-1 rounded text-slate-600 dark:text-slate-300 font-medium hover:text-red-600 transition">1.2x</button>
+                </div>
               </div>
             </div>
 
-            <!-- Tốc độ đọc & Equalizer Animation -->
-            <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
-              <!-- Equalizer animation khi đang phát -->
-              <div id="ttsEqualizer" class="hidden items-end space-x-1 h-5 px-2">
-                <div class="w-1 bg-red-500 rounded-full animate-soundwave"></div>
-                <div class="w-1 bg-red-500 rounded-full animate-soundwave [animation-delay:0.2s]"></div>
-                <div class="w-1 bg-red-500 rounded-full animate-soundwave [animation-delay:0.4s]"></div>
-                <div class="w-1 bg-red-500 rounded-full animate-soundwave [animation-delay:0.1s]"></div>
-              </div>
-
-              <!-- Nút chọn tốc độ đọc -->
-              <div class="flex items-center bg-white dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700 text-xs">
-                <button onclick="setTtsRate(0.85)" class="tts-speed-btn px-2 py-1 rounded text-slate-600 dark:text-slate-300 font-medium">0.8x</button>
-                <button onclick="setTtsRate(1.0)" class="tts-speed-btn px-2 py-1 rounded bg-red-600 text-white font-medium">1.0x</button>
-                <button onclick="setTtsRate(1.25)" class="tts-speed-btn px-2 py-1 rounded text-slate-600 dark:text-slate-300 font-medium">1.2x</button>
-              </div>
+            <!-- Thanh tiến trình đọc (Sentence Progress Bar) -->
+            <div class="w-full bg-slate-200 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div id="ttsProgressBar" class="bg-gradient-to-r from-red-600 to-amber-500 h-full rounded-full transition-all duration-300 w-0"></div>
             </div>
 
           </div>
@@ -1075,12 +1087,15 @@
     let bookmarks = new Set();
     let currentModalArticle = null;
 
-    // Web Speech API State
-    let speechSynth = window.speechSynthesis;
-    let speechUtterance = null;
+    // Web Speech Vietnamese State (7 Nguyên Tắc Cốt Lõi)
+    let currentSpeechToken = 0;
     let isSpeaking = false;
     let ttsRate = 1.0;
-    let vietnameseVoice = null;
+    let bestVietnameseVoice = null;
+    let activeAudioFallback = null;
+    let teleprompterInterval = null;
+    let chromiumKeepAliveTimer = null;
+    let currentTtsText = '';
 
     /**
      * =========================================================================
@@ -1915,6 +1930,12 @@
 
       // Reset TTS khi mở bài mới
       stopSpeechSynthesis();
+      const best = VietnameseSpeechEngine.getBestVoice();
+      if (best) {
+        updateVoiceInfoUI(`🔊 Giọng: ${best.name} [${best.lang}]`, false);
+      } else {
+        updateVoiceInfoUI("ℹ️ Thiết bị chưa có giọng tiếng Việt. Sẵn sàng dùng giọng Online dự phòng.", true);
+      }
 
       document.getElementById('readerModal').classList.remove('hidden');
       document.body.style.overflow = 'hidden';
@@ -1995,120 +2016,353 @@
       }
     }
 
-    /**
-     * =========================================================================
-     * BỘ ĐỌC TRÍ TUỆ NHÂN TẠO (WEB SPEECH API TTS TIẾNG VIỆT)
-     * =========================================================================
-     */
-    function initSpeechVoice() {
-      if (!('speechSynthesis' in window)) {
-        console.warn("Trình duyệt không hỗ trợ Web Speech API.");
-        return;
+    // =============================================================================
+    // BỘ ĐIỀU PHỐI GIỌNG ĐỌC TIẾNG VIỆT CHUẨN TRÊN WEB APP (VIETNAMESE TTS ENGINE)
+    // =============================================================================
+    const VietnameseSpeechEngine = (function () {
+      let speechToken = 0;
+      let cachedVoices = [];
+      let voiceWaitDone = false;
+      let activeAudio = null;
+      let speechRate = 1.0;
+
+      function refreshVoices() {
+        if (!window.speechSynthesis) return [];
+        cachedVoices = window.speechSynthesis.getVoices() || [];
+        return cachedVoices;
       }
 
-      function loadVoices() {
-        const voices = speechSynth.getVoices();
-        // Ưu tiên tìm giọng tiếng Việt chuẩn (vi-VN hoặc vi)
-        vietnameseVoice = voices.find(v => v.lang === 'vi-VN' || v.lang.startsWith('vi')) || null;
-        if (vietnameseVoice) {
-          console.log("Đã phát hiện giọng đọc Tiếng Việt:", vietnameseVoice.name);
+      function isViVoice(v) {
+        const l = String(v.lang || "").replace("_", "-").toLowerCase();
+        const n = String(v.name || "").toLowerCase();
+        return (
+          l === "vi" ||
+          l.startsWith("vi-") ||
+          n.includes("vietnam") ||
+          n.includes("vietnamese") ||
+          n.includes("tiếng việt") ||
+          n.includes("hoài my") ||
+          n.includes("hoaimy") ||
+          n.includes("nam minh") ||
+          n.includes("namminh") ||
+          n.includes("linh") ||
+          n.includes("mai")
+        );
+      }
+
+      if (window.speechSynthesis) {
+        refreshVoices();
+        window.speechSynthesis.onvoiceschanged = refreshVoices;
+      }
+
+      function waitForVoices(maxMs = 3000) {
+        return new Promise((resolve) => {
+          if (!window.speechSynthesis) return resolve(false);
+          if (refreshVoices().some(isViVoice)) return resolve(true);
+          if (voiceWaitDone) return resolve(false);
+
+          const t0 = Date.now();
+          const timer = setInterval(() => {
+            const has = refreshVoices().some(isViVoice);
+            if (has || Date.now() - t0 >= maxMs) {
+              clearInterval(timer);
+              if (!has) voiceWaitDone = true;
+              resolve(has);
+            }
+          }, 150);
+        });
+      }
+
+      function getBestVoice() {
+        const viList = refreshVoices().filter(isViVoice);
+        if (!viList.length) return null;
+
+        const score = (v) => {
+          const n = String(v.name || "").toLowerCase();
+          let sc = 0;
+          if (n.includes("natural") || n.includes("online")) sc += 40;
+          if (n.includes("hoaimy") || n.includes("hoài my") || n.includes("namminh") || n.includes("nam minh")) sc += 25;
+          if (n.includes("google")) sc += 20;
+          if (n.includes("microsoft")) sc += 10;
+          if (String(v.lang).replace("_", "-").toLowerCase() === "vi-vn") sc += 5;
+          return sc;
+        };
+
+        return viList.sort((a, b) => score(b) - score(a))[0];
+      }
+
+      function splitTextIntoChunks(text, maxLen = 170) {
+        const clean = String(text).replace(/\s+/g, " ").trim();
+        const sentences = clean.match(/[^.!?;:]+[.!?;:]*\s*/g) || [clean];
+        const chunks = [];
+        let cur = "";
+
+        const flush = () => {
+          if (cur.trim()) chunks.push(cur.trim());
+          cur = "";
+        };
+
+        sentences.forEach((sent) => {
+          if ((cur + sent).length <= maxLen) {
+            cur += sent;
+          } else {
+            flush();
+            if (sent.length <= maxLen) {
+              cur = sent;
+            } else {
+              (sent.match(/[^,]+,?\s*/g) || [sent]).forEach((part) => {
+                if ((cur + part).length <= maxLen) cur += part;
+                else { flush(); cur = part; }
+              });
+            }
+          }
+        });
+        flush();
+        return chunks;
+      }
+
+      function stop() {
+        speechToken++;
+        if (window.speechSynthesis) {
+          try { window.speechSynthesis.cancel(); } catch (e) {}
+        }
+        if (activeAudio) {
+          try {
+            activeAudio.onended = null;
+            activeAudio.onerror = null;
+            activeAudio.pause();
+            activeAudio.removeAttribute("src");
+            activeAudio.load();
+          } catch (e) {}
+          activeAudio = null;
         }
       }
 
-      loadVoices();
-      if (speechSynth.onvoiceschanged !== undefined) {
-        speechSynth.onvoiceschanged = loadVoices;
+      function pause() {
+        if (activeAudio && !activeAudio.paused) {
+          activeAudio.pause();
+        } else if (window.speechSynthesis && window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+          window.speechSynthesis.pause();
+        }
+      }
+
+      function resume() {
+        if (activeAudio && activeAudio.paused) {
+          activeAudio.play();
+        } else if (window.speechSynthesis && window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+      }
+
+      function setRate(r) {
+        speechRate = Math.max(0.5, Math.min(2.0, Number(r) || 1.0));
+      }
+
+      function speakOnlineFallback(text, token, options) {
+        const chunks = splitTextIntoChunks(text, 180);
+        const audio = new Audio();
+        activeAudio = audio;
+        let idx = 0;
+
+        const silentFallback = () => {
+          if (token !== speechToken) return;
+          if (options.onStatus) options.onStatus("⚠️ Giọng online không khả dụng. Đang chạy chế độ phụ đề tự động.", true);
+          const readMs = Math.max(5000, (String(text).length * 75) / speechRate);
+          setTimeout(() => {
+            if (token === speechToken && options.onend) options.onend();
+          }, readMs);
+        };
+
+        const playNext = () => {
+          if (token !== speechToken) return;
+          if (idx >= chunks.length) {
+            if (options.onend) options.onend();
+            return;
+          }
+          audio.src = "https://translate.googleapis.com/translate_tts?ie=UTF-8&client=tw-ob&tl=vi&q=" + encodeURIComponent(chunks[idx++]);
+          audio.playbackRate = speechRate;
+          const playPromise = audio.play();
+          if (playPromise && playPromise.catch) {
+            playPromise.catch(silentFallback);
+          }
+        };
+
+        audio.onended = playNext;
+        audio.onerror = silentFallback;
+        playNext();
+      }
+
+      async function speak(text, options = {}) {
+        stop();
+        const token = ++speechToken;
+        const hasVoices = window.speechSynthesis ? await waitForVoices(2500) : false;
+        if (token !== speechToken) return;
+
+        const voice = hasVoices ? getBestVoice() : null;
+
+        if (voice) {
+          if (options.onStatus) {
+            options.onStatus(`🔊 Giọng: ${voice.name} [${voice.lang}]`, false);
+          }
+          window.speechSynthesis.cancel();
+          const chunks = splitTextIntoChunks(text);
+
+          chunks.forEach((chunk, i) => {
+            const u = new SpeechSynthesisUtterance(chunk);
+            u.voice = voice;
+            u.lang = voice.lang || "vi-VN";
+            u.rate = speechRate;
+            u.pitch = 1.0;
+
+            u.onerror = (e) => {
+              if (token !== speechToken) return;
+              if (e && (e.error === "interrupted" || e.error === "canceled")) return;
+              if (options.onerror) options.onerror(e);
+            };
+
+            if (i === chunks.length - 1) {
+              u.onend = () => {
+                if (token === speechToken && options.onend) options.onend();
+              };
+            }
+            window.speechSynthesis.speak(u);
+          });
+        } else {
+          if (options.onStatus) {
+            options.onStatus("ℹ️ Thiết bị chưa có giọng tiếng Việt. Đang dùng giọng phát thanh trực tuyến dự phòng.", true);
+          }
+          speakOnlineFallback(text, token, options);
+        }
+      }
+
+      return {
+        speak,
+        stop,
+        pause,
+        resume,
+        setRate,
+        getBestVoice,
+        getAllVoices: () => refreshVoices().filter(isViVoice)
+      };
+    })();
+
+    // =============================================================================
+    // UI CONTROLLER & EVENT BRIDGE CHO VIETNAMESESPEECHENGINE
+    // =============================================================================
+    let currentTtsText = '';
+    let isSpeaking = false;
+
+    async function initSpeechVoice() {
+      await VietnameseSpeechEngine.waitForVoices(2000);
+      const best = VietnameseSpeechEngine.getBestVoice();
+      if (best) {
+        updateVoiceInfoUI(`🔊 Giọng: ${best.name} [${best.lang}]`, false);
+      } else {
+        updateVoiceInfoUI("ℹ️ Thiết bị chưa có giọng tiếng Việt. Sẵn sàng dùng giọng Online dự phòng.", true);
       }
     }
 
     function speakText(text) {
-      if (!('speechSynthesis' in window)) {
-        alert("Rất tiếc, trình duyệt của bạn không hỗ trợ tính năng Web Speech API.");
-        return;
-      }
+      if (!text) return;
+      currentTtsText = text;
+      isSpeaking = true;
+      updateTtsUI(true);
 
-      stopSpeechSynthesis();
-
-      speechUtterance = new SpeechSynthesisUtterance(text);
-      speechUtterance.rate = ttsRate;
-      speechUtterance.lang = 'vi-VN';
-
-      if (vietnameseVoice) {
-        speechUtterance.voice = vietnameseVoice;
-      }
-
-      speechUtterance.onstart = () => {
-        isSpeaking = true;
-        updateTtsUI(true);
-      };
-
-      speechUtterance.onend = () => {
-        isSpeaking = false;
-        updateTtsUI(false);
-      };
-
-      speechUtterance.onerror = () => {
-        isSpeaking = false;
-        updateTtsUI(false);
-      };
-
-      speechSynth.speak(speechUtterance);
+      VietnameseSpeechEngine.speak(text, {
+        onStatus: (statusText, isWarning) => {
+          updateVoiceInfoUI(statusText, isWarning);
+        },
+        onend: () => {
+          isSpeaking = false;
+          updateTtsUI(false);
+        },
+        onerror: (err) => {
+          console.warn("[TTS Error]:", err);
+          isSpeaking = false;
+          updateTtsUI(false);
+        }
+      });
     }
 
     function toggleSpeechSynthesis() {
-      if (!currentModalArticle) return;
       if (isSpeaking) {
         stopSpeechSynthesis();
       } else {
-        speakText(currentModalArticle.tldr);
+        const textToRead = currentModalArticle && currentModalArticle.tldr 
+          ? currentModalArticle.tldr 
+          : (articles.length > 0 ? articles[0].tldr : '');
+        if (textToRead) {
+          speakText(textToRead);
+        }
       }
     }
 
     function stopSpeechSynthesis() {
-      if (speechSynth && speechSynth.speaking) {
-        speechSynth.cancel();
-      }
+      VietnameseSpeechEngine.stop();
       isSpeaking = false;
       updateTtsUI(false);
     }
 
     function setTtsRate(rate) {
-      ttsRate = rate;
+      const r = Number(rate) || 1.0;
+      VietnameseSpeechEngine.setRate(r);
+
       document.querySelectorAll('.tts-speed-btn').forEach(btn => {
         if (btn.textContent.includes(rate + 'x')) {
-          btn.classList.add('bg-red-600', 'text-white');
-          btn.classList.remove('text-slate-600', 'dark:text-slate-300');
+          btn.className = 'tts-speed-btn px-2.5 py-1 rounded bg-red-600 text-white font-medium shadow-xs';
         } else {
-          btn.classList.remove('bg-red-600', 'text-white');
-          btn.classList.add('text-slate-600', 'dark:text-slate-300');
+          btn.className = 'tts-speed-btn px-2.5 py-1 rounded text-slate-600 dark:text-slate-300 font-medium hover:text-red-600 transition';
         }
       });
 
-      if (isSpeaking && currentModalArticle) {
-        speakText(currentModalArticle.tldr);
+      if (isSpeaking && currentTtsText) {
+        speakText(currentTtsText);
       }
     }
 
     function updateTtsUI(speaking) {
       const eq = document.getElementById('ttsEqualizer');
-      const pill = document.getElementById('ttsStatusPill');
       const icon = document.getElementById('ttsIcon');
+      const progressBar = document.getElementById('ttsProgressBar');
 
-      if (!pill || !icon) return;
+      if (icon) {
+        if (speaking) {
+          icon.setAttribute('data-lucide', 'square');
+        } else {
+          icon.setAttribute('data-lucide', 'volume-2');
+        }
+      }
 
-      if (speaking) {
-        if (eq) eq.classList.remove('hidden'), eq.classList.add('flex');
-        pill.textContent = 'Đang đọc...';
-        pill.className = 'text-[10px] px-2 py-0.2 bg-red-100 dark:bg-red-950/80 rounded-full text-red-600 font-bold';
-        icon.setAttribute('data-lucide', 'square');
-      } else {
-        if (eq) eq.classList.add('hidden'), eq.classList.remove('flex');
-        pill.textContent = 'Sẵn sàng';
-        pill.className = 'text-[10px] px-2 py-0.2 bg-white/70 dark:bg-slate-800 rounded-full text-slate-500 border border-slate-200 dark:border-slate-700';
-        icon.setAttribute('data-lucide', 'volume-2');
+      if (eq) {
+        if (speaking) {
+          eq.classList.remove('hidden');
+          eq.classList.add('flex');
+        } else {
+          eq.classList.add('hidden');
+          eq.classList.remove('flex');
+        }
+      }
+
+      if (progressBar) {
+        progressBar.style.width = speaking ? '100%' : '0%';
       }
 
       if (window.lucide) lucide.createIcons();
+    }
+
+    function updateVoiceInfoUI(statusText, isWarning) {
+      const infoEl = document.getElementById('ttsVoiceInfo');
+      const pillEl = document.getElementById('ttsStatusPill');
+      if (!infoEl || !pillEl) return;
+
+      infoEl.textContent = statusText;
+      if (isWarning) {
+        pillEl.textContent = 'Giọng Online';
+        pillEl.className = 'text-[10px] px-2 py-0.5 bg-amber-100 dark:bg-amber-950/80 rounded-full text-amber-700 dark:text-amber-300 font-bold';
+      } else {
+        pillEl.textContent = 'Phát thanh viên';
+        pillEl.className = 'text-[10px] px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/80 rounded-full text-emerald-700 dark:text-emerald-300 font-bold';
+      }
     }
 
     /**
