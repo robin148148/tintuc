@@ -21,6 +21,9 @@
 // 1. CẤU HÌNH HỆ THỐNG (SYSTEM CONFIGURATION)
 // ==========================================
 var CONFIG = {
+  // ID Bảng tính Google Sheet (Đảm bảo tự động chạy ngầm chính xác 100% kể cả khi là Standalone Script trên script.google.com)
+  SPREADSHEET_ID: "11mhGrhrTpLMUeFV6YHG3XIz-sraC6jVFbXpc48AIUGY",
+
   // Tên Sheet lưu trữ dữ liệu tin tức
   SHEET_NAME: "TinTuc",
   
@@ -60,29 +63,48 @@ var CONFIG = {
 // ==========================================
 // 2. DANH SÁCH NGUỒN RSS BÁO CHÍ CHÍNH THỐNG
 // ==========================================
+
+/**
+ * Hàm lấy đối tượng Spreadsheet an toàn (hỗ trợ cả Container-bound Script và Standalone Script)
+ */
+function layBangTinh() {
+  try {
+    var ss = layBangTinh();
+    if (ss) return ss;
+  } catch (e) {}
+  if (CONFIG.SPREADSHEET_ID) {
+    try {
+      return SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    } catch (err) {
+      throw new Error("Không thể mở bảng tính với ID: " + CONFIG.SPREADSHEET_ID + ". Lỗi: " + err.message);
+    }
+  }
+  throw new Error("Không tìm thấy bảng tính Google Sheet! Vui lòng cấu hình CONFIG.SPREADSHEET_ID.");
+}
+
 var RSS_FEEDS = [
-  // --- VnExpress ---
+  // --- VnExpress (Các chuyên mục cập nhật liên tục 2026) ---
   { name: "VnExpress", url: "https://vnexpress.net/rss/tin-moi-nhat.rss" },
   { name: "VnExpress", url: "https://vnexpress.net/rss/thoi-su.rss" },
-  { name: "VnExpress", url: "https://vnexpress.net/rss/khoa-hoc.rss" },
   { name: "VnExpress", url: "https://vnexpress.net/rss/so-hoa.rss" },
+  { name: "VnExpress", url: "https://vnexpress.net/rss/khoa-hoc.rss" },
 
-  // --- Tuổi Trẻ ---
+  // --- Tuổi Trẻ (Đã cập nhật kênh công nghệ chuẩn 2026) ---
   { name: "Tuổi Trẻ", url: "https://tuoitre.vn/rss/tin-moi-nhat.rss" },
   { name: "Tuổi Trẻ", url: "https://tuoitre.vn/rss/thoi-su.rss" },
-  { name: "Tuổi Trẻ", url: "https://tuoitre.vn/rss/nhip-song-so.rss" },
+  { name: "Tuổi Trẻ", url: "https://tuoitre.vn/rss/cong-nghe.rss" },
 
-  // --- Dân Trí ---
+  // --- Dân Trí (Đã loại bỏ feed cũ, thay bằng chuyên mục thời sự & công nghệ trực tiếp) ---
   { name: "Dân Trí", url: "https://dantri.com.vn/rss/tin-moi-nhat.rss" },
-  { name: "Dân Trí", url: "https://dantri.com.vn/rss/xa-hoi.rss" },
-  { name: "Dân Trí", url: "https://dantri.com.vn/rss/suc-manh-so.rss" },
+  { name: "Dân Trí", url: "https://dantri.com.vn/rss/thoi-su.rss" },
+  { name: "Dân Trí", url: "https://dantri.com.vn/rss/cong-nghe.rss" },
 
-  // --- VietnamNet ---
-  { name: "VietnamNet", url: "https://vietnamnet.vn/rss/tin-moi-nhat.rss" },
+  // --- VietnamNet (Đã loại bỏ các link feed cũ ngưng hoạt động, chỉ giữ feed thời sự & kinh tế mới) ---
   { name: "VietnamNet", url: "https://vietnamnet.vn/rss/thoi-su.rss" },
-  { name: "VietnamNet", url: "https://vietnamnet.vn/rss/thong-tin-truyen-thong.rss" },
+  { name: "VietnamNet", url: "https://vietnamnet.vn/rss/kinh-doanh.rss" },
+  { name: "VietnamNet", url: "https://vietnamnet.vn/rss/the-gioi.rss" },
 
-  // --- Thanh Niên ---
+  // --- Thanh Niên (Trực tiếp thời sự & công nghệ hàng ngày) ---
   { name: "Thanh Niên", url: "https://thanhnien.vn/rss/home.rss" },
   { name: "Thanh Niên", url: "https://thanhnien.vn/rss/thoi-su.rss" },
   { name: "Thanh Niên", url: "https://thanhnien.vn/rss/cong-nghe.rss" }
@@ -138,11 +160,12 @@ var CATEGORY_RULES = [
     category: "Công nghệ AI",
     priority: 6,
     keywords: [
-      "trí tuệ nhân tạo", "ai", "artificial intelligence", "llm", "mô hình ngôn ngữ",
+      "trí tuệ nhân tạo", "artificial intelligence", "llm", "mô hình ngôn ngữ",
       "openai", "chatgpt", "gpt-4", "gpt-5", "gemini", "deepmind", "chip bán dẫn ai",
       "bán dẫn ai", "robot tự hành", "quy định quản lý ai", "machine learning",
       "thị giác máy tính", "antigravity", "claude", "copilot", "nvidia", "tsmc",
-      "sinh ảnh ai", "video ai", "ai tạo sinh", "generative ai"
+      "sinh ảnh ai", "video ai", "ai tạo sinh", "generative ai", "công nghệ ai",
+      "ứng dụng ai", "mô hình ai", "chip ai", "trợ lý ai", "giải pháp ai"
     ]
   },
   {
@@ -165,7 +188,7 @@ function tuDongTongHopTinTucHangNgay() {
   console.log("=== BẮT ĐẦU QUY TRÌNH TỰ ĐỘNG TỔNG HỢP TIN TỨC BUỔI SÁNG (07:00 AM) ===");
   var startTime = new Date().getTime();
 
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = layBangTinh();
   var sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(CONFIG.SHEET_NAME);
@@ -194,10 +217,19 @@ function tuDongTongHopTinTucHangNgay() {
 
   console.log("Tổng số tin bài thô cào được từ RSS: " + allArticles.length);
 
-  // 2. Phân loại chuyên mục và lọc tin phù hợp với 6 chuyên mục
+  // 2. Phân loại chuyên mục và BỘ LỌC ĐỘ TƯƠI MỚI (LỌC BỎ HOÀN TOÀN TIN CŨ)
+  var nowMs = new Date().getTime();
+  var maxAgeMs = (CONFIG.MAX_ARTICLE_AGE_HOURS || 72) * 60 * 60 * 1000;
   var qualifiedArticles = [];
+
   for (var k = 0; k < allArticles.length; k++) {
     var art = allArticles[k];
+
+    // CHỐNG TIN CŨ: Bỏ qua tuyệt đối bất kỳ bài báo nào cũ hơn 72 giờ
+    if (art.timestamp && (nowMs - art.timestamp > maxAgeMs)) {
+      continue;
+    }
+
     var matchedCategory = phanLoaiChuyenMuc(art.title, art.rawDescription);
     if (matchedCategory) {
       art.category = matchedCategory;
@@ -206,13 +238,11 @@ function tuDongTongHopTinTucHangNgay() {
     }
   }
 
-  console.log("Số tin bài chuẩn thuộc 6 chuyên mục trọng tâm: " + qualifiedArticles.length);
+  console.log("Số tin bài tươi mới thuộc 6 chuyên mục trọng tâm: " + qualifiedArticles.length);
 
-  // 3. Sắp xếp theo độ nổi bật (Tiêu điểm -> Tin nóng -> Tin thường) và thời gian xuất bản
+  // 3. SẮP XẾP CHUẨN XÁC: Ưu tiên tin mới nhất lên đầu danh sách (Chronological Priority)
   qualifiedArticles.sort(function(a, b) {
-    var rankOrder = { "Tin tiêu điểm": 3, "Tin nóng": 2, "Tin thường": 1 };
-    var rankDiff = (rankOrder[b.prominence] || 1) - (rankOrder[a.prominence] || 1);
-    if (rankDiff !== 0) return rankDiff;
+    // Sắp xếp theo thời gian xuất bản giảm dần (mới nhất lên trên cùng)
     return (b.timestamp || 0) - (a.timestamp || 0);
   });
 
@@ -295,7 +325,10 @@ function docVaPhanTichRSS(feed) {
   var itemRegex = /<item>([\s\S]*?)<\/item>/gi;
   var match;
   
-  while ((match = itemRegex.exec(xmlText)) !== null) {
+  var feedItemCount = 0;
+  // Giới hạn tối đa 40 bài/feed để vừa lấy được tin mới nhất, vừa tối ưu tốc độ cào (< 15 giây)
+  while ((match = itemRegex.exec(xmlText)) !== null && feedItemCount < 40) {
+    feedItemCount++;
     var itemContent = match[1];
 
     // Trích xuất Title
@@ -447,6 +480,23 @@ function phanTichNgayGioRSS(dateString) {
   if (!dateString) return new Date();
   var d = new Date(dateString);
   if (isNaN(d.getTime())) {
+    // Xử lý định dạng ngày giờ báo Tuổi Trẻ: "10/26/2026 2:18:00 PM"
+    try {
+      var cleanStr = dateString.replace(/\u202f/g, " ").trim();
+      var m = cleanStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})\s*(AM|PM)?/i);
+      if (m) {
+        var month = parseInt(m[1], 10) - 1;
+        var day = parseInt(m[2], 10);
+        var year = parseInt(m[3], 10);
+        var hour = parseInt(m[4], 10);
+        var min = parseInt(m[5], 10);
+        var sec = parseInt(m[6], 10);
+        if (m[7] && m[7].toUpperCase() === "PM" && hour < 12) hour += 12;
+        if (m[7] && m[7].toUpperCase() === "AM" && hour === 12) hour = 0;
+        var customDate = new Date(year, month, day, hour, min, sec);
+        if (!isNaN(customDate.getTime())) return customDate;
+      }
+    } catch (e) {}
     return new Date();
   }
   return d;
@@ -497,6 +547,15 @@ function phanLoaiChuyenMuc(title, description) {
         maxScore = totalWeightedScore;
         bestCategory = rule.category;
       }
+    }
+  }
+
+  // Kiểm tra riêng từ viết hoa "AI" (phân biệt hoa thường để tránh nhầm với đại từ "của ai", "hai", "ngày mai"...)
+  if (/\bAI\b/.test(title || "") || /\bAI\b/.test(description || "")) {
+    var aiScore = (/\bAI\b/.test(title || "") ? 3 : 1) * 10 + 6;
+    if (aiScore > maxScore) {
+      maxScore = aiScore;
+      bestCategory = "Công nghệ AI";
     }
   }
 
@@ -637,23 +696,64 @@ function ghiNoiChongTrungLap(sheet, newRows) {
  * tự động kích hoạt cào tin vào khung giờ 07:00 sáng mỗi ngày.
  */
 function thietLapTriggerHangNgay() {
-  // Xóa các trigger cũ cùng tên để tránh kích hoạt trùng lặp
+  console.log("=== BẮT ĐẦU CÀI ĐẶT TRIGGER TỰ ĐỘNG 07:00 SÁNG ===");
+  var ss = layBangTinh();
+  console.log("1. Kết nối bảng tính thành công: " + ss.getName() + " (ID: " + ss.getId() + ")");
+
+  // 1. Xóa các trigger cũ cùng tên để tránh kích hoạt trùng lặp
   var allTriggers = ScriptApp.getProjectTriggers();
+  var deletedCount = 0;
   for (var i = 0; i < allTriggers.length; i++) {
     if (allTriggers[i].getHandlerFunction() === "tuDongTongHopTinTucHangNgay") {
       ScriptApp.deleteTrigger(allTriggers[i]);
+      deletedCount++;
     }
   }
+  if (deletedCount > 0) {
+    console.log("2. Đã dọn dẹp " + deletedCount + " trigger cũ.");
+  }
 
-  // Tạo Trigger chạy hàng ngày lúc 07:00 AM (Múi giờ Asia/Ho_Chi_Minh)
-  ScriptApp.newTrigger("tuDongTongHopTinTucHangNgay")
+  // 2. Tạo Trigger chạy hàng ngày lúc 07:00 AM (Múi giờ Asia/Ho_Chi_Minh)
+  var trigger = ScriptApp.newTrigger("tuDongTongHopTinTucHangNgay")
     .timeBased()
     .everyDays(1)
     .atHour(7)
     .inTimezone(CONFIG.TIMEZONE)
     .create();
 
-  console.log("ĐÃ CÀI ĐẶT THÀNH CÔNG: Trigger tổng hợp tin tức tự động chạy hàng ngày lúc 07:00 AM (Giờ Hà Nội).");
+  console.log("✅ CÀI ĐẶT THÀNH CÔNG RỰC RỠ!");
+  console.log(" - Tên hàm kích hoạt: tuDongTongHopTinTucHangNgay");
+  console.log(" - Tần suất: Chạy mỗi ngày lúc 07:00 AM");
+  console.log(" - Múi giờ: " + CONFIG.TIMEZONE + " (Giờ Hà Nội)");
+  console.log(" - ID Trigger: " + trigger.getUniqueId());
+}
+
+/**
+ * KIỂM TRA TRẠNG THÁI TRIGGER (Chẩn đoán xem Trigger đã được bật hay chưa)
+ */
+function kiemTraTrangThaiTrigger() {
+  console.log("=== BÁO CÁO TRẠNG THÁI BỘ KÍCH HOẠT (TRIGGER STATUS) ===");
+  var ss = layBangTinh();
+  console.log("1. Bảng tính kết nối: " + ss.getName() + " (Tab: " + CONFIG.SHEET_NAME + ")");
+
+  var allTriggers = ScriptApp.getProjectTriggers();
+  console.log("2. Tổng số Trigger đang đăng ký trên Google Cloud: " + allTriggers.length);
+
+  var found = false;
+  for (var i = 0; i < allTriggers.length; i++) {
+    var t = allTriggers[i];
+    console.log(" • Trigger #" + (i + 1) + ": Hàm = [" + t.getHandlerFunction() + "] | Loại = " + t.getEventType());
+    if (t.getHandlerFunction() === "tuDongTongHopTinTucHangNgay") {
+      found = true;
+    }
+  }
+
+  if (found) {
+    console.log("✅ TRẠNG THÁI: Trigger tự động 07:00 sáng ĐANG HOẠT ĐỘNG BÌNH THƯỜNG.");
+  } else {
+    console.warn("⚠️ CẢNH BÁO: CHƯA CÓ TRIGGER NÀO ĐƯỢC TẠO!");
+    console.warn("👉 HƯỚNG DẪN: Trên thanh công cụ Apps Script, chọn hàm 'thietLapTriggerHangNgay' và bấm nút [Chạy] (Run) 1 lần để kích hoạt tự động.");
+  }
 }
 
 /**
@@ -672,14 +772,15 @@ function huyTriggerHangNgay() {
 }
 
 /**
- * Hàm kiểm tra nhanh: Xóa sạch và cào tin ngay lập tức để người dùng kiểm tra kết quả
+ * Hàm kiểm tra nhanh: Cào tin và cập nhật bảng tính ngay lập tức
  */
 function chayThuNghiemNgay() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.SHEET_NAME);
+  var ss = layBangTinh();
+  var sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
   if (!sheet) {
-    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(CONFIG.SHEET_NAME);
+    sheet = ss.insertSheet(CONFIG.SHEET_NAME);
+    khoiTaoDinhDangSheet(sheet);
   }
-  khoiTaoDinhDangSheet(sheet);
   return tuDongTongHopTinTucHangNgay();
 }
 
@@ -687,7 +788,16 @@ function chayThuNghiemNgay() {
 // 9. WEB APP ENDPOINT (DỰ PHÒNG CUNG CẤP JSON API NẾU CẦN)
 // =========================================================================
 function doGet(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  // Cho phép kích hoạt cào tin tức tức thì từ xa qua URL: ?action=update
+  if (e && e.parameter && (e.parameter.action === 'update' || e.parameter.action === 'sync' || e.parameter.action === 'crawl')) {
+    try {
+      tuDongTongHopTinTucHangNgay();
+    } catch (err) {
+      console.warn("Lỗi khi tự động cập nhật qua Web App: " + err.message);
+    }
+  }
+
+  var ss = layBangTinh();
   var sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
   if (!sheet) {
     return ContentService.createTextOutput(JSON.stringify({ error: "Sheet not found" }))

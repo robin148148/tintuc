@@ -113,7 +113,17 @@ Bạn có thể cài đặt theo 1 trong 2 cách cực kỳ đơn giản:
 
 ### Các tính năng nổi bật trên giao diện:
 - **⚡ Ticker Tin Nóng (Marquee):** Dải tin tức khẩn cấp chạy liên tục. Bấm vào tiêu đề bất kỳ để mở bài đọc ngay.
-- **🎙️ Bộ Đọc Trợ Lý AI (Web Speech API):** Trong cửa sổ đọc nhanh bài báo, bấm nút **Nghe tóm tắt** để nghe giọng đọc tiếng Việt rõ ràng, kèm sóng âm thanh (Equalizer) sống động và tùy chỉnh tốc độ `0.8x`, `1.0x`, `1.2x`.
+- **🎙️ Trợ lý Phát thanh viên AI Chuẩn Tiếng Việt (Web Speech Vietnamese - 7 Nguyên Tắc Cốt Lõi):**
+  - **Bộ lọc nghiêm ngặt tiếng Việt:** Chặn tuyệt đối fallback sang giọng tiếng Anh (Microsoft David/Zira).
+  - **Voice Scoring Xếp hạng:** Tự động ưu tiên giọng phát thanh viên chất lượng cao VTV (*Hoài My Online, Nam Minh Online, Google Neural tiếng Việt*).
+  - **Nạp giọng bất đồng bộ (`waitForSpeechVoices`):** Xử lý mượt mà việc nạp giọng cloud trên Edge và Chrome.
+  - **Cắt câu chống ngắt tiếng 15s (`Sentence Chunking`):** Tách đoạn 120-180 ký tự theo dấu câu, giải quyết triệt để lỗi trình duyệt Chromium tự động ngắt tiếng ngầm sau 15 giây.
+  - **Quản lý Token phiên đọc (`speechToken`):** Chống triệt để tình trạng âm thanh bị vọng, lặp hoặc chồng chéo khi bấm đổi bài hoặc tua nhanh.
+  - **Cơ chế dự phòng 3 tầng (Multi-tier Fallback):**
+    - *Tầng 1:* Web Speech API chuẩn với giọng tiếng Việt trên máy.
+    - *Tầng 2:* Tự động chuyển sang luồng Online TTS API chuẩn ngữ điệu tiếng Việt (khi chạy trên máy tính Windows chưa cài gói vi-VN).
+    - *Tầng 3:* Chế độ đọc phụ đề chữ mô phỏng Teleprompter an toàn tuyệt đối khi mất mạng.
+  - **Minh bạch UX:** Hiển thị rõ tên giọng đang đọc, thanh tiến trình đọc theo thời gian thực (Progress bar) và nút tùy chỉnh tốc độ `0.8x`, `1.0x`, `1.2x`.
 - **🔍 Tìm kiếm tức thì (Live Search):** Bấm phím tắt `/` để kích hoạt nhanh thanh tìm kiếm. Lọc theo từ khóa trong tiêu đề, tóm tắt và nguồn báo.
 - **⭐ Lưu đọc sau (Bookmarks):** Bấm vào biểu tượng bookmark để lưu bài viết vào mục "Đã lưu" trên thiết bị.
 - **🌓 Giao diện Tối/Sáng (Dark/Light Mode):** Chuyển đổi mượt mà và tự động ghi nhớ sở thích của người dùng.
